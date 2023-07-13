@@ -18,10 +18,10 @@ val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
 }
 
 private fun ApplicationRequest.resolveSensitivity(): String {
-    val token = header("token-x-authorization")?.let {
-
-    } ?: authorization()
-    TODO("Not yet implemented")
+    val acr = header("token-x-authorization")
+        ?: authorization()
+        ?: "NA"
+    return acr
 }
 
 
@@ -34,7 +34,7 @@ object ApiMetricsCounter {
         .register()
 
     fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
-        counter.labels("${statusCode?.value ?: "NAN"}", route, statusCode.resolveStatusGroup()).inc()
+        counter.labels("${statusCode?.value ?: "NAN"}", route, statusCode.resolveStatusGroup(), acr).inc()
     }
 }
 
