@@ -65,16 +65,16 @@ private fun HttpStatusCode?.resolveStatusGroup() =
     when {
         this == null -> "unresolved"
         value isInStatusRange 200 -> "OK"
-        value isInStatusRange 300 -> "Redirection"
+        value isInStatusRange 300 -> "redirection"
         value isInStatusRange (400 excluding 401 and 403) -> "client_error"
         value == 401 || value == 403 -> "auth_issues"
-        value isInStatusRange 500 -> "server_error"
+        value isInStatusRange 500   -> "server_error"
         else -> "unresolved"
     }
 
 private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
 private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
 private infix fun Int.isInStatusRange(p: Pair<Int, List<Int>>): Boolean =
-    p.second.any { it == this } || this isInStatusRange p.first
+    p.second.none { it == this } && this isInStatusRange p.first
 
 private infix fun Int.excluding(i: Int) = Pair(this, listOf(i))

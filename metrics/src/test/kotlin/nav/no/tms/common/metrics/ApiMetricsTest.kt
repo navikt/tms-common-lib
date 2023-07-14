@@ -15,28 +15,30 @@ import io.ktor.server.testing.*
 import io.prometheus.client.Collector.MetricFamilySamples.Sample
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.CollectorRegistry.defaultRegistry
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.util.*
 
-
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class ApiMetricsTest {
 
     @Test
+    @Order(1)
     fun `setter opp apiMetrics`() =
         testApplication {
-            install(ApiResponseMetrics)
+            initTestApplication()
+            client.getwithAuthHeader(acr = "unknown")
 
-            routing {
-                get("test") {
-                    call.respond(HttpStatusCode.OK)
-                }
-            }
-
-            client.withAuthHeader("test", "unknown")
-
-            val collected = defaultRegistry.metricFamilySamples().asIterator().next()
-
-            collected.samples.first().apply {
+            val collected =
+                defaultRegistry.metricFamilySamples().asIterator().next().samples.first()
+            require(collected != null)
+            collected.apply {
                 labelNames[0] shouldBe "status"
                 labelValues[0] shouldBe "200"
                 labelNames[1] shouldBe "route"
@@ -49,39 +51,45 @@ class ApiMetricsTest {
         }
 
     @Test
+    @Order(2)
     fun `henter ut sensitivitet`() =
         testApplication {
-            install(ApiResponseMetrics)
-            install(Authentication) {
-                jwt {
-                    skipWhen { true }
-                }
-            }
+            initTestApplication()
 
-            routing {
-                authenticate {
-                    get("test/{status?}") {
-                        call.respond(HttpStatusCode.OK)
-                    }
-                }
-            }
-
-            client.withAuthHeader("/test", "level4")
+            client.getwithAuthHeader(acr = "level4")
             defaultRegistry.assertCounterValue(1) { labelValues[3] == "high" }
 
-            client.withAuthHeader("/test", "idporten-loa-high")
+            client.getwithAuthHeader(acr = "idporten-loa-high")
             defaultRegistry.assertCounterValue(2) { labelValues[3] == "high" }
 
-            client.withAuthHeader("/test", "idporten-loa-substantial")
+            client.getwithAuthHeader(acr = "idporten-loa-substantial")
             defaultRegistry.assertCounterValue(1) { labelValues[3] == "substantial" }
 
-            client.withAuthHeader("/test", "level3")
+            client.getwithAuthHeader(acr = "level3")
             defaultRegistry.assertCounterValue(2) { labelValues[3] == "substantial" }
 
             client.get("/test")
             defaultRegistry.assertCounterValue(1) { labelValues[3] == "NA" }
 
         }
+
+    @ParameterizedTest
+    @Order(3)
+    @EnumSource(TestStatusCode::class)
+    fun `mapper status riktig`(code: TestStatusCode) = testApplication {
+        initTestApplication(code.returnStatus)
+        client.getwithAuthHeader(acr = "something")
+
+        val sample = defaultRegistry.metricFamilySamples().asIterator().next().samples.find {
+            it.labelValues[0] == code.expectedStatusString
+        }
+
+        require(sample != null)
+        sample.labelValues[2] shouldBe code.expectedStatusGroup
+
+    }
+
+
 }
 
 private fun CollectorRegistry.assertCounterValue(counterValue: Int, function: Sample.() -> Boolean) {
@@ -92,7 +100,28 @@ private fun CollectorRegistry.assertCounterValue(counterValue: Int, function: Sa
 }
 
 
-private suspend fun HttpClient.withAuthHeader(url: String, acr: String, authHeaderName: String = "Authorization") {
+private fun ApplicationTestBuilder.initTestApplication(returnStatus: HttpStatusCode = HttpStatusCode.OK) = run {
+    install(ApiResponseMetrics)
+    install(Authentication) {
+        jwt {
+            skipWhen { true }
+        }
+    }
+
+    routing {
+        authenticate {
+            get("test") {
+                call.respond(returnStatus)
+            }
+        }
+    }
+}
+
+private suspend fun HttpClient.getwithAuthHeader(
+    url: String = "test",
+    acr: String,
+    authHeaderName: String = "Authorization"
+) {
     get(url) {
         headers {
             header(authHeaderName, "Bearer ${generateToken(acr)}")
@@ -110,3 +139,20 @@ private fun generateToken(
     .withIssuer(issuer)
     .withClaim("acr", acr)
     .sign(Algorithm.HMAC256(secret))
+
+
+enum class TestStatusCode(
+    val returnStatus: HttpStatusCode,
+    val expectedStatusGroup: String
+) {
+    OK(HttpStatusCode.OK, "OK"),
+    CREATED(HttpStatusCode.Created, "OK"),
+    BAD_REQUEST(HttpStatusCode.BadRequest, "client_error"),
+    NOT_ACCEPTABLE(HttpStatusCode.NotAcceptable, "client_error"),
+    UNAUTHORIZED(HttpStatusCode.Unauthorized, "auth_issues"),
+    FORBIDDEN(HttpStatusCode.Forbidden, "auth_issues"),
+    SERVER_ERROR(HttpStatusCode.InternalServerError, "server_error"),
+    SERVICE_UNAVAILABLE(HttpStatusCode.ServiceUnavailable, "server_error");
+
+    val expectedStatusString = returnStatus.value.toString()
+}

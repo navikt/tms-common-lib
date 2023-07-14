@@ -34,6 +34,7 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:4.3.1")
     testImplementation("io.kotest:kotest-assertions-core:4.3.1")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -47,17 +48,3 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
-
-/*
-* interface PrometheusDefaults: DependencyGroup {
-    override val version get() = "0.9.0"
-    override val groupId get() = "io.prometheus"
-
-    val common get() = dependency("simpleclient_common")
-    val hotspot get() = dependency("simpleclient_hotspot")
-    val httpServer get() = dependency("simpleclient_httpserver")
-    val logback get() = dependency("simpleclient_logback")
-    val simpleClient get() = dependency("simpleclient")
-}
-*
-* */
