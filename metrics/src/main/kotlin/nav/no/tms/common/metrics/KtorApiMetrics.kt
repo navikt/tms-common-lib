@@ -1,6 +1,7 @@
 package nav.no.tms.common.metrics
 
 
+import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
@@ -12,18 +13,40 @@ val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
     on(ResponseSent) { call ->
         val status = call.response.status()
         val route = call.request.uri
-        //legge til sensitivitet?
         ApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
     }
 }
 
-private fun ApplicationRequest.resolveSensitivity(): String {
-    val acr = header("token-x-authorization")
-        ?: authorization()
-        ?: "NA"
-    return acr
-}
 
+private fun ApplicationRequest.resolveSensitivity(): String =
+    header("token-x-authorization").acr()
+        ?: authorization().acr()
+        ?: "NA"
+
+
+private fun String?.acr(): String? =
+    this?.let {
+        val jwtClaim = JWT.decode(this.split("Bearer ")[1])
+            ?.getClaim("acr")
+            ?.asString()
+        Sensitvivity.sensitivityString(jwtClaim)
+    }
+
+private enum class Sensitvivity(val knownValues: List<String>) {
+    HIGH(listOf("level4", "idporten-loa-high")), SUBSTANTIAL(listOf("level3", "idporten-loa-substantial"));
+
+    fun contains(acrStr: String?) = knownValues.any { it == acrStr }
+
+    companion object {
+        fun sensitivityString(acrValue: String?) =
+            when {
+                acrValue == null -> "NA"
+                HIGH.contains(acrValue) -> HIGH.name.lowercase()
+                SUBSTANTIAL.contains(acrValue) -> SUBSTANTIAL.name.lowercase()
+                else -> acrValue
+            }
+    }
+}
 
 object ApiMetricsCounter {
     const val COUNTER_NAME = "tms_api_call"
