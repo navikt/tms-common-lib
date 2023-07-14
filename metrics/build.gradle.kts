@@ -15,11 +15,26 @@ plugins {
     `maven-publish`
 }
 
+
 repositories {
     mavenCentral()
     mavenLocal()
     maven("https://jitpack.io")
 }
+
+publishing {
+    repositories{
+        mavenLocal()
+    }
+
+    publications {
+        create<MavenPublication>("local") {
+            from(components["java"])
+        }
+    }
+}
+
+
 
 dependencies {
     val ktorVersion = "2.3.2"
