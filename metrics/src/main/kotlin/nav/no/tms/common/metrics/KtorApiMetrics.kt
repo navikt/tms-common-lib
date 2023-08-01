@@ -24,15 +24,19 @@ private fun ApplicationRequest.resolveSensitivity(): String =
         ?: "NA"
 
 
-private fun String?.acr(): String? =
-    this?.let {
-        val jwtClaim = JWT.decode(this.split("Bearer ")[1])
-            ?.getClaim("acr")
-            ?.asString()
-        Sensitvivity.sensitivityString(jwtClaim)
+private fun String?.acr(): String? = this
+    ?.split("Bearer ")
+    ?.let { authHeaderArray ->
+        if(authHeaderArray.size !=2){null}
+        else {
+            val jwtClaim = JWT.decode(authHeaderArray[1])
+                ?.getClaim("acr")
+                ?.asString()
+            Sensitivity.sensitivityString(jwtClaim)
+        }
     }
 
-private enum class Sensitvivity(val knownValues: List<String>) {
+private enum class Sensitivity(val knownValues: List<String>) {
     HIGH(listOf("level4", "idporten-loa-high")), SUBSTANTIAL(listOf("level3", "idporten-loa-substantial"));
 
     fun contains(acrStr: String?) = knownValues.any { it == acrStr }
@@ -68,7 +72,7 @@ private fun HttpStatusCode?.resolveStatusGroup() =
         value isInStatusRange 300 -> "redirection"
         value isInStatusRange (400 excluding 401 and 403) -> "client_error"
         value == 401 || value == 403 -> "auth_issues"
-        value isInStatusRange 500   -> "server_error"
+        value isInStatusRange 500 -> "server_error"
         else -> "unresolved"
     }
 
