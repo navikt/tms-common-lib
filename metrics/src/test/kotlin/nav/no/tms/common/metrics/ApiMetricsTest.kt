@@ -3,8 +3,10 @@ package nav.no.tms.common.metrics
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -30,7 +32,7 @@ class ApiMetricsTest {
 
     @Test
     @Order(1)
-    fun `setter opp apiMetrics`() =
+    fun `setter opp apiMetrics plugin`() =
         testApplication {
             initTestApplication()
             client.getwithAuthHeader(acr = "unknown")
@@ -89,6 +91,36 @@ class ApiMetricsTest {
 
     }
 
+    @Test
+    @Order(4)
+    fun  `installerer med endpunkt`() = testApplication {
+        application {
+            installApiMetrics(true)
+            install(Authentication) {
+                jwt {
+                    skipWhen { true }
+                }
+            }
+
+            routing {
+                authenticate {
+                    get("test") {
+                        call.respond(200)
+                    }
+                }
+            }
+
+        }
+        client.get("test")
+        client.get("test")
+
+        client.get("metrics").apply {
+            status shouldBe HttpStatusCode.OK
+            bodyAsText() shouldNotBe ""
+
+        }
+
+    }
 
 }
 

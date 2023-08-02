@@ -4,9 +4,14 @@ package nav.no.tms.common.metrics
 import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
+
 import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
+import io.prometheus.client.exporter.common.TextFormat
 
 
 val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
@@ -17,43 +22,20 @@ val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
     }
 }
 
-
-private fun ApplicationRequest.resolveSensitivity(): String =
-    header("token-x-authorization").acr()
-        ?: authorization().acr()
-        ?: "NA"
-
-
-private fun String?.acr(): String? = this
-    ?.split("Bearer ")
-    ?.let { authHeaderArray ->
-        if(authHeaderArray.size !=2){null}
-        else {
-            val jwtClaim = JWT.decode(authHeaderArray[1])
-                ?.getClaim("acr")
-                ?.asString()
-            Sensitivity.sensitivityString(jwtClaim)
-        }
-    }
-
-private enum class Sensitivity(val knownValues: List<String>) {
-    HIGH(listOf("level4", "idporten-loa-high")), SUBSTANTIAL(listOf("level3", "idporten-loa-substantial"));
-
-    fun contains(acrStr: String?) = knownValues.any { it == acrStr }
-
-    companion object {
-        fun sensitivityString(acrValue: String?) =
-            when {
-                acrValue == null -> "NA"
-                HIGH.contains(acrValue) -> HIGH.name.lowercase()
-                SUBSTANTIAL.contains(acrValue) -> SUBSTANTIAL.name.lowercase()
-                else -> acrValue
+fun Application.installApiMetrics(withRoute:Boolean){
+    log.info("installerer apimetrics med /metrics endepunkt")
+    install(ApiResponseMetrics)
+    routing {
+        get("/metrics") {
+           val collectorRegistry = CollectorRegistry.defaultRegistry
+            call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004)) {
+                TextFormat.write004(this, collectorRegistry.filteredMetricFamilySamples(emptySet()))
             }
+        }
     }
 }
 
-object ApiMetricsCounter {
-    const val COUNTER_NAME = "tms_api_call"
+private object ApiMetricsCounter {
     private val counter = Counter.build()
         .name(COUNTER_NAME)
         .help("Kall til team minside sine api-er")
@@ -65,20 +47,3 @@ object ApiMetricsCounter {
     }
 }
 
-private fun HttpStatusCode?.resolveStatusGroup() =
-    when {
-        this == null -> "unresolved"
-        value isInStatusRange 200 -> "OK"
-        value isInStatusRange 300 -> "redirection"
-        value isInStatusRange (400 excluding 401 and 403) -> "client_error"
-        value == 401 || value == 403 -> "auth_issues"
-        value isInStatusRange 500 -> "server_error"
-        else -> "unresolved"
-    }
-
-private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
-private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
-private infix fun Int.isInStatusRange(p: Pair<Int, List<Int>>): Boolean =
-    p.second.none { it == this } && this isInStatusRange p.first
-
-private infix fun Int.excluding(i: Int) = Pair(this, listOf(i))
