@@ -1,7 +1,6 @@
 package nav.no.tms.common.metrics
 
 
-import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
 
@@ -40,7 +39,7 @@ fun Application.installApiMetrics(withRoute: Boolean) {
 
 private object ApiMetricsCounter {
     private val counter = Counter.build()
-        .name(COUNTER_NAME)
+        .name(API_CALLS_COUNTER_NAME)
         .help("Kall til team minside sine api-er")
         .labelNames("status", "route", "statusgroup", "acr")
         .register()

@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.request.*
 
-internal const val COUNTER_NAME = "tms_api_call"
+const val API_CALLS_COUNTER_NAME = "tms_api_call"
 
 internal fun HttpStatusCode?.resolveStatusGroup() =
     when {

@@ -35,7 +35,7 @@ private object ApiMicometerCounter {
     lateinit var micrometerRegistry: PrometheusMeterRegistry
 
     fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
-        Counter.builder(COUNTER_NAME)
+        Counter.builder(API_CALLS_COUNTER_NAME)
             .tag("status","${statusCode?.value ?: "NAN"}")
             .tag("statusgroup", statusCode.resolveStatusGroup())
             .tag("route", route)

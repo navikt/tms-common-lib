@@ -19,8 +19,6 @@ import io.micrometer.prometheus.*
 import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import org.junit.jupiter.api.*
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -34,8 +32,8 @@ class ApiMicrometricsTest {
             initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
             client.getwithAuthHeader(acr = "unknown")
 
-            prometheusMeterRegistry.get(COUNTER_NAME) shouldNotBe null
-            val counterValues = prometheusMeterRegistry.meters.find { it.id.name == COUNTER_NAME }.let {
+            prometheusMeterRegistry.get(API_CALLS_COUNTER_NAME) shouldNotBe null
+            val counterValues = prometheusMeterRegistry.meters.find { it.id.name == API_CALLS_COUNTER_NAME }.let {
                 require(it != null)
                 it.id
             }
