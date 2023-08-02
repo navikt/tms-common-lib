@@ -22,14 +22,17 @@ val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
     }
 }
 
-fun Application.installApiMetrics(withRoute:Boolean){
-    log.info("installerer apimetrics med /metrics endepunkt")
+fun Application.installApiMetrics(withRoute: Boolean) {
+    log.info("installerer apimetrics")
     install(ApiResponseMetrics)
-    routing {
-        get("/metrics") {
-           val collectorRegistry = CollectorRegistry.defaultRegistry
-            call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004)) {
-                TextFormat.write004(this, collectorRegistry.filteredMetricFamilySamples(emptySet()))
+    if (withRoute) {
+        log.info("installerer endepunkt /metrics")
+        routing {
+            get("/metrics") {
+                val collectorRegistry = CollectorRegistry.defaultRegistry
+                call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004)) {
+                    TextFormat.write004(this, collectorRegistry.filteredMetricFamilySamples(emptySet()))
+                }
             }
         }
     }

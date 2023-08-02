@@ -9,7 +9,6 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
-    id("io.ktor.plugin") version "2.3.2"
 
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
@@ -38,15 +37,16 @@ publishing {
 
 
 dependencies {
-    implementation("io.ktor:ktor-server-core-jvm:2.3.2")
-    implementation("io.ktor:ktor-server-metrics-micrometer-jvm:2.3.2")
+    val ktorVersion = "2.3.2"
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-metrics-micrometer-jvm:$ktorVersion")
     val prometheusVersion = "0.9.0"
 
-    implementation("io.ktor:ktor-server-core")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.prometheus:simpleclient_common:$prometheusVersion")
-    implementation("io.ktor:ktor-server-auth")
-    implementation("io.ktor:ktor-server-auth-jwt")
-    implementation("io.ktor:ktor-server-metrics-micrometer")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     api("io.micrometer:micrometer-registry-prometheus:1.7.0")
 
 
@@ -54,7 +54,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.1")
     testImplementation("io.kotest:kotest-runner-junit5:4.3.1")
     testImplementation("io.kotest:kotest-assertions-core:4.3.1")
-    testImplementation("io.ktor:ktor-server-test-host")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
 }
 

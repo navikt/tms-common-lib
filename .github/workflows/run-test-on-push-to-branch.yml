@@ -19,4 +19,4 @@ jobs:
           java-version: '17.x'
 
       - name: Kompiler og kjør tester
-        run: ./gradlew clean build -x metrics:shadowJar
+        run: ./gradlew clean build
