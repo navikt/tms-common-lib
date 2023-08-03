@@ -21,15 +21,25 @@ installTmsApiMetrics {
 ```
 
 ### Using micrometer library
-Installation with micrometer has two extra config-options : `installMicrometricsPlugin`, and `registry`
+Installation with micrometer has two extra config-options : 
+`installMicrometricsPlugin`
+Perform installation of the Micrometer plugin, defaults to false.
+should be true ONLY IF Micrometer is not already installed
+
+`registry`
+Supply a Prometehusregistry to be used as collector, defaults to new instance.
+If the default is used, setupMetricsRoute must be set to true
+It is nessecary to supply a predefined registry if
+1. the application uses R&R(which already has micrometer installed),
+2. if micrometrics is used in any other part of the application
+3. if the installation of micrometrics is performed by `installTmsMicrometerMetrics`
+
 
 ```kotlin
-installTmsApiMetrics {
-    /*Prometehusregistry, defaults to new instance, if the default is used, setupMetricsRoute must be set to true
-    It is nessecary to supply a predefined registry if 
-    1. the application uses R&R(which already has micrometer installed), 
-    2. if micrometrics is used in any other part of the application */
+installTmsMicrometerMetrics {
+
     registry = registryUsedInApplication
+    installMicrometerPlugin = true
     setupMetricsRoute = true
     ignoreRoutes { route, status ->
         (route == "/ignore" && status == 201) || (route == "/knowndefect" && status == 500)
