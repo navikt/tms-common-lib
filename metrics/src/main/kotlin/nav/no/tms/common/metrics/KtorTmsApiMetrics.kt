@@ -11,18 +11,19 @@ import io.ktor.server.routing.*
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
 import io.prometheus.client.exporter.common.TextFormat
+import nav.no.tms.common.metrics.Sensitivity.Companion.resolveSensitivity
 
 
 fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     val metricsConfig = TmsMetricsConfig().apply(config)
-    ApiMetricsCounter.config = metricsConfig
+    TmsApiMetricsCounter.config = metricsConfig
     log.info("Installerer api metrics")
     install(createApplicationPlugin(name = "ApiResponseMetrics") {
         on(ResponseSent) { call ->
             val route = call.request.uri
             val status = call.response.status()
             if (!metricsConfig.excludeRoute(route, status?.value)) {
-                ApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
+                TmsApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
             }
 
         }
@@ -40,7 +41,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     }
 }
 
-private object ApiMetricsCounter {
+private object TmsApiMetricsCounter {
     lateinit var config: TmsMetricsConfig
 
     private val counter = Counter.build()
@@ -50,7 +51,7 @@ private object ApiMetricsCounter {
         .register()
 
     fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
-        counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode,route), acr)
+        counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode,route).tagName, acr)
             .inc()
     }
 }

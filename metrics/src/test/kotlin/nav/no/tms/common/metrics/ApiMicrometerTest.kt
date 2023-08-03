@@ -16,8 +16,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.micrometer.prometheus.*
-import io.prometheus.client.Collector
-import io.prometheus.client.CollectorRegistry
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -27,7 +25,7 @@ class ApiMicrometricsTest {
     private val prometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
     @Test
-    fun `setter opp apiMicrometrics`() =
+    fun `setter opp apiMicrometerMetrics`() =
         testApplication {
             initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
             client.getwithAuthHeader(acr = "unknown")
@@ -54,7 +52,9 @@ class ApiMicrometricsTest {
     @Test
     fun `installerer med endepunkt`() = testApplication {
         application {
-            installApiMetrics(true)
+            installTmsMicrometerMetrics {
+                setupMetricsRoute = true
+            }
             install(Authentication) {
                 jwt {
                     skipWhen { true }
@@ -81,16 +81,17 @@ class ApiMicrometricsTest {
 
     }
 
-}
+    @Test
+    fun `kaster exception på dårlig config`(){
+            testApplication {
+                application {
+                    assertThrows<IllegalArgumentException> { installTmsMicrometerMetrics {} }
+                    assertDoesNotThrow {  installTmsApiMetrics { setupMetricsRoute = true } }
 
-private fun CollectorRegistry.assertCounterValue(
-    counterValue: Int,
-    function: Collector.MetricFamilySamples.Sample.() -> Boolean
-) {
-    metricFamilySamples().asIterator().next().samples.find { it.function() }.apply {
-        require(this != null)
-        value shouldBe counterValue
+                }
+            }
     }
+
 }
 
 
@@ -102,9 +103,12 @@ private fun ApplicationTestBuilder.initTestApplication(
 
         install(MicrometerMetrics) {
             registry = prometheusMeterRegistry
-            // ...
         }
-        installApiMicrometer(prometheusMeterRegistry, withRoute = true)
+        installTmsMicrometerMetrics {
+            registry = prometheusMeterRegistry
+            setupMetricsRoute = true
+        }
+
     }
     install(Authentication) {
         jwt {

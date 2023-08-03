@@ -2,6 +2,7 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
@@ -17,11 +18,8 @@ import io.ktor.server.testing.*
 import io.prometheus.client.Collector.MetricFamilySamples.Sample
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.CollectorRegistry.defaultRegistry
-import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestMethodOrder
+import nav.no.tms.common.metrics.StatusGroup.Companion.belongsTo
+import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.util.*
@@ -93,15 +91,14 @@ class ApiMetricsTest {
 
     @Test
     @Order(4)
-    fun  `installerer med endpunkt`() = testApplication {
+    fun `installerer med endpunkt`() = testApplication {
         application {
-            installApiMetrics(true)
+            installTmsApiMetrics { setupMetricsRoute = true }
             install(Authentication) {
                 jwt {
                     skipWhen { true }
                 }
             }
-
             routing {
                 authenticate {
                     get("test") {
@@ -122,18 +119,96 @@ class ApiMetricsTest {
 
     }
 
+    @Test
+    @Order(5)
+    fun `ignorerer ruter med gitt status`() {
+
+        testApplication {
+            application {
+                installTmsApiMetrics {
+                    ignoreRoutes { route, status ->
+                        (route == "/ignore" && status == 201) || (route == "dontignoreforthisstatus" && status == 500)
+                    }
+                }
+            }
+
+            routing {
+                get("ignore") {
+                    call.respond(HttpStatusCode.Created)
+                }
+                get("dontignore") {
+                    call.respond(HttpStatusCode.Created)
+                }
+                get("dontignoreforthisstatus") {
+                    call.respond(HttpStatusCode.Created)
+                }
+            }
+
+            client.get("ignore")
+            client.get("dontignore")
+            client.get("dontignoreforthisstatus")
+
+            defaultRegistry.assertCounterValue(0) { labelValues[1] == "/ignore" }
+            defaultRegistry.assertCounterValue(1) { labelValues[1] == "/dontignore" }
+            defaultRegistry.assertCounterValue(1) { labelValues[1] == "/dontignoreforthisstatus" }
+        }
+    }
+
+    @Test
+    @Order(6)
+    fun `custommapping for statusgruppe`() {
+        val requestIterator =
+            listOf(
+                HttpStatusCode.BadRequest,
+                HttpStatusCode.Unauthorized,
+                HttpStatusCode.OK,
+                HttpStatusCode.OK
+            ).iterator()
+
+        testApplication {
+            application {
+                installTmsApiMetrics {
+                    statusGroups {
+                        "map" belongsTo StatusGroup.IGNORED whenStatusIs HttpStatusCode.BadRequest
+                        "map" belongsTo StatusGroup.SERVER_ERROR whenStatusIs HttpStatusCode.Unauthorized
+                    }
+                }
+            }
+
+            routing {
+                get("map") {
+                    call.respond(requestIterator.next())
+                }
+            }
+
+            client.get("map")
+            client.get("map")
+            client.get("map")
+            client.get("map")
+
+            val metrics = defaultRegistry.metricFamilySamples()
+                .nextElement().samples.filter { it.name == "tms_api_call_total" && it.labelValues[1] == "/map" }
+
+            metrics.find { it.labelValues[2] == StatusGroup.OK.tagName }?.value shouldBe 2
+            metrics.find { it.labelValues[2] == StatusGroup.IGNORED.tagName }?.value shouldBe 1
+            metrics.find { it.labelValues[2] == StatusGroup.SERVER_ERROR.tagName }?.value shouldBe 1
+
+        }
+    }
 }
 
-private fun CollectorRegistry.assertCounterValue(counterValue: Int, function: Sample.() -> Boolean) {
+private fun CollectorRegistry.assertCounterValue(counterValue: Int, clue: String = "", function: Sample.() -> Boolean) {
     metricFamilySamples().asIterator().next().samples.find { it.function() }.apply {
-        require(this != null)
-        value shouldBe counterValue
+        withClue(clue) { (this?.value ?: 0) shouldBe counterValue }
     }
 }
 
 
 private fun ApplicationTestBuilder.initTestApplication(returnStatus: HttpStatusCode = HttpStatusCode.OK) = run {
-    install(ApiResponseMetrics)
+    application {
+        installTmsApiMetrics { setupMetricsRoute = true }
+    }
+
     install(Authentication) {
         jwt {
             skipWhen { true }
