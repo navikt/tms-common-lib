@@ -21,7 +21,8 @@ installTmsApiMetrics {
 ```
 
 ### Using micrometer library
-Installation with micrometer has two extra config-options : 
+Installation with micrometer has two extra config-options: 
+
 `installMicrometricsPlugin`
 Perform installation of the Micrometer plugin, defaults to false.
 should be true ONLY IF Micrometer is not already installed
