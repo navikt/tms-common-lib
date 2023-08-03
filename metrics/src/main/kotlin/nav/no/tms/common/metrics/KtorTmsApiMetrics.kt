@@ -13,19 +13,22 @@ import io.prometheus.client.Counter
 import io.prometheus.client.exporter.common.TextFormat
 
 
-val ApiResponseMetrics = createApplicationPlugin(name = "ApiResponseMetrics") {
-    on(ResponseSent) { call ->
-        val status = call.response.status()
-        val route = call.request.uri
-        ApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
-    }
-}
+fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
+    val metricsConfig = TmsMetricsConfig().apply(config)
+    ApiMetricsCounter.config = metricsConfig
+    log.info("Installerer api metrics")
+    install(createApplicationPlugin(name = "ApiResponseMetrics") {
+        on(ResponseSent) { call ->
+            val route = call.request.uri
+            val status = call.response.status()
+            if (!metricsConfig.excludeRoute(route, status?.value)) {
+                ApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
+            }
 
-fun Application.installApiMetrics(withRoute: Boolean) {
-    log.info("installerer apimetrics")
-    install(ApiResponseMetrics)
-    if (withRoute) {
-        log.info("installerer endepunkt /metrics")
+        }
+    })
+    if (metricsConfig.setupMetricsRoute) {
+        log.info("installerer endepunkt /metrics med defaultregistry")
         routing {
             get("/metrics") {
                 val collectorRegistry = CollectorRegistry.defaultRegistry
@@ -38,6 +41,8 @@ fun Application.installApiMetrics(withRoute: Boolean) {
 }
 
 private object ApiMetricsCounter {
+    lateinit var config: TmsMetricsConfig
+
     private val counter = Counter.build()
         .name(API_CALLS_COUNTER_NAME)
         .help("Kall til team minside sine api-er")
@@ -45,7 +50,8 @@ private object ApiMetricsCounter {
         .register()
 
     fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
-        counter.labels("${statusCode?.value ?: "NAN"}", route, statusCode.resolveStatusGroup(), acr).inc()
+        counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode,route), acr)
+            .inc()
     }
 }
 
