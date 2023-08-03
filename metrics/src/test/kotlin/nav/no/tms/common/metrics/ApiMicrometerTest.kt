@@ -82,10 +82,52 @@ class ApiMicrometricsTest {
     }
 
     @Test
+    fun `installerer micrometrics`() = testApplication {
+        application {
+            installTmsMicrometerMetrics {
+                installMicrometerPlugin = true
+                setupMetricsRoute = true
+            }
+            install(Authentication) {
+                jwt {
+                    skipWhen { true }
+                }
+            }
+
+            routing {
+                authenticate {
+                    get("test") {
+                        call.respond(200)
+                    }
+                }
+            }
+
+        }
+        client.get("test")
+        client.get("test")
+
+        client.get("metrics").apply {
+            status shouldBe HttpStatusCode.OK
+            bodyAsText() shouldNotBe ""
+
+        }
+
+    }
+
+    @Test
     fun `kaster exception på dårlig config`(){
             testApplication {
                 application {
                     assertThrows<IllegalArgumentException> { installTmsMicrometerMetrics {} }
+                    assertThrows<IllegalArgumentException> {
+                        installTmsMicrometerMetrics { installMicrometerPlugin = true }
+                    }
+                    assertDoesNotThrow {
+                        installTmsMicrometerMetrics {
+                            installMicrometerPlugin = true
+                            setupMetricsRoute = true
+                        }
+                    }
                     assertDoesNotThrow {  installTmsApiMetrics { setupMetricsRoute = true } }
 
                 }
@@ -100,7 +142,6 @@ private fun ApplicationTestBuilder.initTestApplication(
     prometheusMeterRegistry: PrometheusMeterRegistry
 ) = run {
     application {
-
         install(MicrometerMetrics) {
             registry = prometheusMeterRegistry
         }

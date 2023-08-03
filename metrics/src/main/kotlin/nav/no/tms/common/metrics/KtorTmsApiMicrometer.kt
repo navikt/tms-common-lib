@@ -18,7 +18,7 @@ fun Application.installTmsMicrometerMetrics(config: TmsMicrometricsConfig.() -> 
         config()
         verify()
     }
-    if (metricsConfig.installMicrometricsPlugin) {
+    if (metricsConfig.installMicrometerPlugin) {
         log.info("Installerer micrometer plugin for Ktor")
         install(MicrometerMetrics) {
             registry = metricsConfig.registry
@@ -64,7 +64,12 @@ private object TmsApiMicrometerCounter {
 
 class TmsMicrometricsConfig : TmsMetricsConfig() {
     private var registryWasSupplied = false
-    var installMicrometricsPlugin: Boolean = false
+    private var performingMicrometerInstallation = false
+    var installMicrometerPlugin: Boolean = false
+        set(value) {
+            performingMicrometerInstallation = true
+            field = value
+        }
     var registry: PrometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         set(value) {
             registryWasSupplied = true
@@ -72,8 +77,11 @@ class TmsMicrometricsConfig : TmsMetricsConfig() {
         }
 
     fun verify() {
-        if (!registryWasSupplied && !setupMetricsRoute) {
-            throw IllegalArgumentException("Registry was not supplied, using default implementation without setting up metrics route in installation may cause metrics to be unavaiable")
+        if (!registryWasSupplied) {
+            when {
+                !performingMicrometerInstallation && !setupMetricsRoute -> throw IllegalArgumentException("Using default registry without setting up route may cause the data to be unavaiable during scrape on applicationroute")
+                performingMicrometerInstallation && !setupMetricsRoute -> throw IllegalArgumentException("Using default registry without setting up route when installing Micrometer may cause the data to be unavaiable during scrape on applicationroute")
+            }
         }
     }
 }
