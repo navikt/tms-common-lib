@@ -1,6 +1,6 @@
 
 # Metrics library
-
+ https://jitpack.io/#navikt/tms-common-lib
 
 ## Ktor Application Installers
 
