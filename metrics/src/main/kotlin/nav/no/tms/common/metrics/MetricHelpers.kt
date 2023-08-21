@@ -104,6 +104,12 @@ data class StatusGroupMapping(val statusCode: HttpStatusCode, val route: String,
         if (this.statusCode == statusCode && this.comparableRoute == route.trimMargin()) statusGroup else null
 }
 
+private val uriPattern = "^([^?]+)(?:\\?.*)?\$".toRegex()
 
+fun ApplicationRequest.uriWithoutQuery() = uriPattern.find(uri)
+    ?.destructured
+    ?.let { (path) ->
+        path
+    } ?: uri
 
 

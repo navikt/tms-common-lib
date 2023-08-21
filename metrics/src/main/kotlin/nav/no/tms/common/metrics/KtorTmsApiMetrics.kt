@@ -20,7 +20,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     log.info("Installerer api metrics")
     install(createApplicationPlugin(name = "ApiResponseMetrics") {
         on(ResponseSent) { call ->
-            val route = call.request.uri
+            val route = call.request.uriWithoutQuery()
             val status = call.response.status()
             if (!metricsConfig.excludeRoute(route, status?.value)) {
                 TmsApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())

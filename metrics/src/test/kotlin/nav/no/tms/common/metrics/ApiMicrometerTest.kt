@@ -49,6 +49,7 @@ class ApiMicrometricsTest {
 
             }
         }
+
     @Test
     fun `installerer med endepunkt`() = testApplication {
         application {
@@ -132,6 +133,25 @@ class ApiMicrometricsTest {
 
                 }
             }
+    }
+
+    @Test
+    fun `ignorerer path query`() = testApplication {
+        initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
+
+        client.getwithAuthHeader(url = "/query/endpoint?param1=hello", acr = "N/A")
+        client.getwithAuthHeader(url = "/query/endpoint?param2=world", acr = "N/A")
+        client.getwithAuthHeader(url = "/query/endpoint?param1=hello&param2=world", acr = "N/A")
+
+        prometheusMeterRegistry.get(API_CALLS_COUNTER_NAME) shouldNotBe null
+        val counters = prometheusMeterRegistry.meters.filter { it.id.name == API_CALLS_COUNTER_NAME }
+
+        counters.size shouldBe 1
+
+        counters.first().apply {
+            id.getTag("route") shouldBe "/query/endpoint"
+            (this as PrometheusCounter).count() shouldBe 3
+        }
     }
 
 }
