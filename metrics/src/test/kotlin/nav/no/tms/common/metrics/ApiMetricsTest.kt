@@ -230,6 +230,39 @@ class ApiMetricsTest {
             .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/query/endpoint" }
             ?.value shouldBe 3
     }
+
+    @Test
+    @Order(8)
+    fun `maskerer egendefinerte path-variabler`() = testApplication {
+        application {
+            installTmsApiMetrics {
+                maskPathParams("/get/resource/{name}/with/id/{id}")
+            }
+        }
+
+        routing {
+            get("/get/resource/{name}/with/id/{id}") {
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        client.get("/get/resource/cake/with/id/123")
+        client.get("/get/resource/cookie/with/id/456")
+        client.get("/get/resource/fruit/with/id/789")
+
+        val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
+
+        routeLabelValues shouldContain "/get/resource/{name}/with/id/{id}"
+
+        routeLabelValues shouldNotContain "/get/resource/cake/with/id/123"
+        routeLabelValues shouldNotContain "/get/resource/cookie/with/id/456"
+        routeLabelValues shouldNotContain "/get/resource/fruit/with/id/789"
+
+
+        defaultRegistry.metricFamilySamples()
+            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/get/resource/{name}/with/id/{id}" }
+            ?.value shouldBe 3
+    }
 }
 
 

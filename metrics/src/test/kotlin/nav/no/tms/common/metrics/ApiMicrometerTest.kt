@@ -2,6 +2,8 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
@@ -16,6 +18,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.micrometer.prometheus.*
+import io.prometheus.client.CollectorRegistry
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -154,6 +157,27 @@ class ApiMicrometricsTest {
         }
     }
 
+
+
+    @Test
+    fun `maskerer egendefinerte path-variabler`() = testApplication {
+        initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
+
+        client.get("/get/resource/cake/with/id/123")
+        client.get("/get/resource/cookie/with/id/456")
+        client.get("/get/resource/fruit/with/id/789")
+
+        prometheusMeterRegistry.get(API_CALLS_COUNTER_NAME) shouldNotBe null
+        val counters = prometheusMeterRegistry.meters.filter { it.id.name == API_CALLS_COUNTER_NAME }
+
+        counters.size shouldBe 1
+
+        counters.first().apply {
+            id.getTag("route") shouldBe "/get/resource/{name}/with/id/{id}"
+            (this as PrometheusCounter).count() shouldBe 3
+        }
+    }
+
 }
 
 
@@ -168,6 +192,7 @@ private fun ApplicationTestBuilder.initTestApplication(
         installTmsMicrometerMetrics {
             registry = prometheusMeterRegistry
             setupMetricsRoute = true
+            maskPathParams("/get/resource/{name}/with/id/{id}")
         }
 
     }
