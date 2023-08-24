@@ -2,6 +2,7 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.request.*
 import nav.no.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
 
@@ -70,26 +71,53 @@ enum class StatusGroup(val tagName: String) {
 }
 
 open class TmsMetricsConfig {
+
     private val customStatusGroupMapping = mutableListOf<StatusGroupMapping>()
     private var ignoreRoutesFuction: (String, Int) -> Boolean = { _, _ -> false }
+    internal val pathParamMaskingRules = mutableListOf<PathParamMask>()
     var setupMetricsRoute: Boolean = false
+
     internal fun statusGroup(statusCode: HttpStatusCode?, route: String): StatusGroup =
         statusCode?.let {
             customStatusGroupMapping.find { it.memberGroup(statusCode, route) != null }?.statusGroup
                 ?: statusCode.resolveStatusGroup()
         } ?: StatusGroup.UNRESOLVED
+
     internal fun excludeRoute(route: String, status: Int?) =
         status == null ||
                 route.endsWith("isready", ignoreCase = true) || route.endsWith(
             "isalive",
             ignoreCase = true
         ) || route.endsWith("metrics", ignoreCase = true) || ignoreRoutesFuction(route, status)
+
     fun ignoreRoutes(function: (String, Int) -> Boolean) {
         ignoreRoutesFuction = function
     }
+
+    private val validPattern = "^((/[a-zA-Z0-9_-]+)|(/\\{[a-zA-Z0-9_-]+})|(/))+\$".toRegex()
+
+    private val replacingPattern = "\\{[a-zA-Z0-9_-]+}".toRegex()
+
+    fun maskPathParams(route: String) {
+        if (validPattern.matches(route)) {
+
+            val regex = replacingPattern.replace(route, "([a-zA-Z0-9_-]+)").toRegex()
+
+            pathParamMaskingRules.add(
+                PathParamMask(
+                    maskedRoute = route,
+                    routePattern = regex
+                )
+            )
+        } else {
+            throw IllegalArgumentException("$route is not a valid pattern.")
+        }
+    }
+
     fun statusGroups(block: () -> Unit) {
         block()
     }
+
     infix fun Pair<String, StatusGroup>.whenStatusIs(statusCode: HttpStatusCode) = StatusGroupMapping(
         route = first,
         statusGroup = second,
@@ -104,6 +132,24 @@ data class StatusGroupMapping(val statusCode: HttpStatusCode, val route: String,
         if (this.statusCode == statusCode && this.comparableRoute == route.trimMargin()) statusGroup else null
 }
 
+internal data class PathParamMask(
+    val maskedRoute: String,
+    val routePattern: Regex
+)
 
+internal fun recordableRoute(config: TmsMetricsConfig, request: ApplicationRequest): String {
+    return applyPathParamMask(config, request.uriWithoutQuery())
+}
 
+private val uriPattern = "^([^?]+)(?:\\?.*)?\$".toRegex()
 
+private fun ApplicationRequest.uriWithoutQuery() = uriPattern.find(uri)
+    ?.destructured
+    ?.component1()
+    ?: uri
+
+private fun applyPathParamMask(config: TmsMetricsConfig, route: String): String {
+    return config.pathParamMaskingRules.find { it.routePattern.matches(route) }
+        ?.maskedRoute
+        ?: route
+}

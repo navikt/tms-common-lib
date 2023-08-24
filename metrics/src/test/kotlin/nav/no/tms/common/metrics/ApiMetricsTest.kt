@@ -3,6 +3,10 @@ package nav.no.tms.common.metrics
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.shouldNotContainInOrder
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
@@ -195,7 +199,77 @@ class ApiMetricsTest {
 
         }
     }
+
+    @Test
+    @Order(7)
+    fun `ignorerer path query`() = testApplication {
+        application {
+            installTmsApiMetrics { }
+        }
+
+        routing {
+            get("/query/endpoint") {
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        client.get("query/endpoint?param1=hello")
+        client.get("query/endpoint?param2=world")
+        client.get("query/endpoint?param1=hello&param2=world")
+
+        val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
+
+        routeLabelValues shouldContain "/query/endpoint"
+
+        routeLabelValues shouldNotContain "query/endpoint?param1=hello"
+        routeLabelValues shouldNotContain "query/endpoint?param2=world"
+        routeLabelValues shouldNotContain "query/endpoint?param1=hello&param2=world"
+
+
+        defaultRegistry.metricFamilySamples()
+            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/query/endpoint" }
+            ?.value shouldBe 3
+    }
+
+    @Test
+    @Order(8)
+    fun `maskerer egendefinerte path-variabler`() = testApplication {
+        application {
+            installTmsApiMetrics {
+                maskPathParams("/get/resource/{name}/with/id/{id}")
+            }
+        }
+
+        routing {
+            get("/get/resource/{name}/with/id/{id}") {
+                call.respond(HttpStatusCode.OK)
+            }
+        }
+
+        client.get("/get/resource/cake/with/id/123")
+        client.get("/get/resource/cookie/with/id/456")
+        client.get("/get/resource/fruit/with/id/789")
+
+        val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
+
+        routeLabelValues shouldContain "/get/resource/{name}/with/id/{id}"
+
+        routeLabelValues shouldNotContain "/get/resource/cake/with/id/123"
+        routeLabelValues shouldNotContain "/get/resource/cookie/with/id/456"
+        routeLabelValues shouldNotContain "/get/resource/fruit/with/id/789"
+
+
+        defaultRegistry.metricFamilySamples()
+            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/get/resource/{name}/with/id/{id}" }
+            ?.value shouldBe 3
+    }
 }
+
+
+
+private fun CollectorRegistry.labelValues(metric: String, label: String) = metricFamilySamples().nextElement()
+    .samples.filter { it.name == metric }
+    .map { it.labelValues[it.labelNames.indexOf(label)] }
 
 private fun CollectorRegistry.assertCounterValue(counterValue: Int, clue: String = "", function: Sample.() -> Boolean) {
     metricFamilySamples().asIterator().next().samples.find { it.function() }.apply {
