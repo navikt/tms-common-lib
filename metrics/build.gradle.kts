@@ -48,6 +48,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     api("io.micrometer:micrometer-registry-prometheus:1.7.0")
+    api(KotlinLogging.logging)
 
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
