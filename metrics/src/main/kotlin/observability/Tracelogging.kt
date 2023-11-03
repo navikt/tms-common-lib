@@ -38,3 +38,32 @@ fun withTraceLogging(
         ) + extra
     ) { function() }
 }
+
+suspend fun withTraceLoggingAsync(
+    id: String,
+    contenttype: Contenttype,
+    extra: Map<String, String> = emptyMap(),
+    function: () -> Unit
+) {
+    withLoggingContext(
+        mapOf(
+            "minside_id" to id,
+            "contenttype" to contenttype.name
+        ) + extra
+    ) { function() }
+}
+
+suspend fun withApiTracing(
+    route: String,
+    contenttype: Contenttype,
+    extra: Map<String, String> = emptyMap(),
+    method: String = "GET",
+    function: suspend () -> Unit
+) {
+    withLoggingContext(
+        mapOf(
+            "route" to "$method – $route",
+            "contenttype" to contenttype.name
+        ) + extra
+    ) { function() }
+}
