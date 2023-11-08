@@ -48,7 +48,7 @@ suspend fun withTraceLoggingAsync(
     id: String,
     contenttype: Contenttype,
     extra: Map<String, String> = emptyMap(),
-    function: () -> Unit
+    function: suspend () -> Unit
 ) {
     withLoggingContext(
         mapOf(
