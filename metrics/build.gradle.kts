@@ -23,6 +23,17 @@ repositories {
 val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
 
 publishing {
+    repositories{
+        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/tms-common-lib")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
     publications {
         create<MavenPublication>("gpr") {
             groupId = "no.nav.tms.common"
