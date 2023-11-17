@@ -2,7 +2,6 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import nav.no.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
 
@@ -45,27 +44,25 @@ internal enum class Sensitivity(val knownValues: List<String>) {
 
 enum class StatusGroup(val tagName: String) {
     UNRESOLVED("unresolved"), OK("OK"), REDIRECTION("redirection"),
-    CLIENT_ERROR("client_error"), AUTH_ISSUES("auth_issues"), SERVER_ERROR("server_error"),
+    CLIENT_ERROR("client_error"), UNAUTHORIZED("unauthorized"), CORS_ERROR("cors_error"), SERVER_ERROR("server_error"),
     IGNORED("ignored");
 
     companion object {
         internal fun HttpStatusCode?.resolveStatusGroup(): StatusGroup =
             when {
                 this == null -> UNRESOLVED
-                value isInStatusRange 200 -> OK
-                value isInStatusRange 300 -> REDIRECTION
-                value isInStatusRange (400 excluding 401 and 403) -> StatusGroup.CLIENT_ERROR
-                value == 401 || value == 403 -> AUTH_ISSUES
-                value isInStatusRange 500 -> SERVER_ERROR
+                value isOfStatusClass 200 -> OK
+                value isOfStatusClass 300 -> REDIRECTION
+                value isOfStatusClass 400 -> when (value) {
+                    401 -> UNAUTHORIZED
+                    403 -> CORS_ERROR
+                    else -> CLIENT_ERROR
+                }
+                value isOfStatusClass 500 -> SERVER_ERROR
                 else -> UNRESOLVED
             }
         infix fun String.belongsTo(ok: StatusGroup) = Pair(this, ok)
-        private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
-        private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
-        private infix fun Int.isInStatusRange(p: Pair<Int, List<Int>>): Boolean =
-            p.second.none { it == this } && this isInStatusRange p.first
-
-        private infix fun Int.excluding(i: Int) = Pair(this, listOf(i))
+        private infix fun Int.isOfStatusClass(i: Int): Boolean = this >= i && this < (i + 100)
 
     }
 }
