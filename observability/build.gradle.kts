@@ -15,6 +15,7 @@ plugins {
     `maven-publish`
 }
 
+
 repositories {
     mavenCentral()
     mavenLocal()
@@ -26,7 +27,7 @@ publishing {
     publications {
         create<MavenPublication>("gpr") {
             groupId = "no.nav.tms.common"
-            artifactId = "metrics"
+            artifactId = "observability"
             version = libraryVersion
             from(components["java"])
         }
@@ -34,7 +35,7 @@ publishing {
 }
 
 dependencies {
-    implementation(KotlinLogging.logging)
+    api(KotlinLogging.logging)
     implementation(KtorServer.auth)
     implementation(KtorServer.authJwt)
     implementation(KtorServer.core)
