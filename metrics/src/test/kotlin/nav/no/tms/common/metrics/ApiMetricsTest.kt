@@ -213,7 +213,7 @@ class ApiMetricsTest {
             }
         }
 
-        client.get("query/endpoint?param1=hello")
+        client.get("query/endpoint?param1=hello").status shouldBe HttpStatusCode.OK
         client.get("query/endpoint?param2=world")
         client.get("query/endpoint?param1=hello&param2=world")
 
@@ -233,14 +233,17 @@ class ApiMetricsTest {
 
     @Test
     @Order(8)
-    fun `maskerer egendefinerte path-variabler`() = testApplication {
+    fun `maskerer path variabler`() = testApplication {
         application {
             installTmsApiMetrics {
-                maskPathParams("/get/resource/{name}/with/id/{id}")
+
             }
         }
 
         routing {
+            get("/query/endpoint") {
+                call.respond(HttpStatusCode.OK)
+            }
             get("/get/resource/{name}/with/id/{id}") {
                 call.respond(HttpStatusCode.OK)
             }
@@ -250,6 +253,10 @@ class ApiMetricsTest {
         client.get("/get/resource/cookie/with/id/456")
         client.get("/get/resource/fruit/with/id/789")
 
+        defaultRegistry.metricFamilySamples()
+            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/get/resource/{name}/with/id/{id}" }
+            ?.value shouldBe 3
+
         val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
 
         routeLabelValues shouldContain "/get/resource/{name}/with/id/{id}"
@@ -257,14 +264,8 @@ class ApiMetricsTest {
         routeLabelValues shouldNotContain "/get/resource/cake/with/id/123"
         routeLabelValues shouldNotContain "/get/resource/cookie/with/id/456"
         routeLabelValues shouldNotContain "/get/resource/fruit/with/id/789"
-
-
-        defaultRegistry.metricFamilySamples()
-            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/get/resource/{name}/with/id/{id}" }
-            ?.value shouldBe 3
     }
 }
-
 
 
 private fun CollectorRegistry.labelValues(metric: String, label: String) = metricFamilySamples().nextElement()
@@ -293,6 +294,9 @@ private fun ApplicationTestBuilder.initTestApplication(returnStatus: HttpStatusC
         authenticate {
             get("test") {
                 call.respond(returnStatus)
+            }
+            get("/get/resource/{name}/with/id/{id}") {
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

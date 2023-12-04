@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import io.ktor.server.routing.*
+import io.ktor.util.*
 import nav.no.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
 
 
@@ -59,6 +61,7 @@ enum class StatusGroup(val tagName: String) {
                 value isInStatusRange 500 -> SERVER_ERROR
                 else -> UNRESOLVED
             }
+
         infix fun String.belongsTo(ok: StatusGroup) = Pair(this, ok)
         private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
         private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
@@ -76,6 +79,10 @@ open class TmsMetricsConfig {
     private var ignoreRoutesFuction: (String, Int) -> Boolean = { _, _ -> false }
     internal val pathParamMaskingRules = mutableListOf<PathParamMask>()
     var setupMetricsRoute: Boolean = false
+
+    companion object {
+        val routeKey = AttributeKey<String>("RequestRoute")
+    }
 
     internal fun statusGroup(statusCode: HttpStatusCode?, route: String): StatusGroup =
         statusCode?.let {
@@ -137,8 +144,14 @@ internal data class PathParamMask(
     val routePattern: Regex
 )
 
-internal fun recordableRoute(config: TmsMetricsConfig, request: ApplicationRequest): String {
-    return applyPathParamMask(config, request.uriWithoutQuery())
+internal fun recordableRoute(request: ApplicationRequest) = request.uriWithoutQuery()
+fun RoutingApplicationCall.routeStr(): String {
+    val authenticateRegex = "\\/\\(authenticate [\\\"a-zA-Z]*\\)".toRegex()
+    val methodRegex = "/\\(method:[a-zA-Z]*\\)".toRegex()
+    return route
+        .toString()
+        .replace(authenticateRegex, "")
+        .replace(methodRegex, "")
 }
 
 private val uriPattern = "^([^?]+)(?:\\?.*)?\$".toRegex()

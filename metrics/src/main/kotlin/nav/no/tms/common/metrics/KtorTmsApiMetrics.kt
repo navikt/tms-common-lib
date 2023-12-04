@@ -19,9 +19,12 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     TmsApiMetricsCounter.config = metricsConfig
     log.info("Installerer api metrics")
     install(createApplicationPlugin(name = "ApiResponseMetrics") {
+        on(MonitoringEvent(Routing.RoutingCallStarted)) {
+            it.attributes.put(TmsMetricsConfig.routeKey, it.routeStr())
+        }
         on(ResponseSent) { call ->
 
-            val route = recordableRoute(metricsConfig, call.request)
+            val route = call.attributes.getOrNull(TmsMetricsConfig.routeKey)?: recordableRoute(call.request)
             val status = call.response.status()
 
             if (!metricsConfig.excludeRoute(route, status?.value)) {
@@ -53,7 +56,7 @@ private object TmsApiMetricsCounter {
         .register()
 
     fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
-        counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode,route).tagName, acr)
+        counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode, route).tagName, acr)
             .inc()
     }
 }
