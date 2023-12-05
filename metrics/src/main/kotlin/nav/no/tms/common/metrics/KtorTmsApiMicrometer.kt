@@ -32,29 +32,12 @@ fun Application.installTmsMicrometerMetrics(config: TmsMicrometricsConfig.() -> 
             }
         }
     }
-
-    log.info("Installerer TmsMicrometrics for Ktor")
-
-    install(createApplicationPlugin(name = "TmsMicrometrics") {
-
-        on(MonitoringEvent(Routing.RoutingCallStarted)) {
-            it.attributes.put(TmsMetricsConfig.routeKey, it.routeStr())
-        }
-
-        on(ResponseSent) { call ->
-            val route = call.attributes.getOrNull(TmsMetricsConfig.routeKey)?: recordableRoute(call.request)
-            val status = call.response.status()
-
-            if (!metricsConfig.excludeRoute(route, status?.value)) {
-                TmsApiMicrometerCounter.countApiCall(status, route, call.request.resolveSensitivity())
-            }
-        }
-    })
+    installMetrics(metricsConfig,TmsApiMicrometerCounter)
 }
 
-private object TmsApiMicrometerCounter {
+private object TmsApiMicrometerCounter: Reporter {
     lateinit var config: TmsMicrometricsConfig
-    fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
+    override fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
         Counter.builder(API_CALLS_COUNTER_NAME)
             .tag("status", "${statusCode?.value ?: "NAN"}")
             .tag(

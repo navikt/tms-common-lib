@@ -78,7 +78,6 @@ open class TmsMetricsConfig {
 
     private val customStatusGroupMapping = mutableListOf<StatusGroupMapping>()
     private var ignoreRoutesFuction: (String, Int) -> Boolean = { _, _ -> false }
-    internal val pathParamMaskingRules = mutableListOf<PathParamMask>()
     var setupMetricsRoute: Boolean = false
 
     companion object {
@@ -101,27 +100,6 @@ open class TmsMetricsConfig {
     fun ignoreRoutes(function: (String, Int) -> Boolean) {
         ignoreRoutesFuction = function
     }
-
-    private val validPattern = "^((/[a-zA-Z0-9_-]+)|(/\\{[a-zA-Z0-9_-]+})|(/))+\$".toRegex()
-
-    private val replacingPattern = "\\{[a-zA-Z0-9_-]+}".toRegex()
-
-    fun maskPathParams(route: String) {
-        if (validPattern.matches(route)) {
-
-            val regex = replacingPattern.replace(route, "([a-zA-Z0-9_-]+)").toRegex()
-
-            pathParamMaskingRules.add(
-                PathParamMask(
-                    maskedRoute = route,
-                    routePattern = regex
-                )
-            )
-        } else {
-            throw IllegalArgumentException("$route is not a valid pattern.")
-        }
-    }
-
     fun statusGroups(block: () -> Unit) {
         block()
     }
@@ -139,12 +117,6 @@ data class StatusGroupMapping(val statusCode: HttpStatusCode, val route: String,
     fun memberGroup(statusCode: HttpStatusCode, route: String): StatusGroup? =
         if (this.statusCode == statusCode && this.comparableRoute == route.trimMargin()) statusGroup else null
 }
-
-internal data class PathParamMask(
-    val maskedRoute: String,
-    val routePattern: Regex
-)
-
 internal fun recordableRoute(request: ApplicationRequest) = request.uriWithoutQuery()
 
 fun RoutingApplicationCall.routeStr() = route.originalRoute()
@@ -161,9 +133,9 @@ fun Route.originalRoute(): String = when (val parentRoute = parent?.originalRout
     }
 }
 
-private val uriPattern = "^([^?]+)(?:\\?.*)?\$".toRegex()
-
-private fun ApplicationRequest.uriWithoutQuery() = uriPattern.find(uri)
+private fun ApplicationRequest.uriWithoutQuery() =
+    "^([^?]+)(?:\\?.*)?\$".toRegex()
+    .find(uri)
     ?.destructured
     ?.component1()
     ?: uri

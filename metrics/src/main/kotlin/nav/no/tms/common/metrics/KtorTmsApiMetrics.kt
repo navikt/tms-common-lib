@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 
 import io.ktor.server.application.hooks.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.prometheus.client.CollectorRegistry
@@ -18,21 +17,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     val metricsConfig = TmsMetricsConfig().apply(config)
     TmsApiMetricsCounter.config = metricsConfig
     log.info("Installerer api metrics")
-    install(createApplicationPlugin(name = "ApiResponseMetrics") {
-        on(MonitoringEvent(Routing.RoutingCallStarted)) {
-            it.attributes.put(TmsMetricsConfig.routeKey, it.routeStr())
-        }
-        on(ResponseSent) { call ->
-
-            val route = call.attributes.getOrNull(TmsMetricsConfig.routeKey)?: recordableRoute(call.request)
-            val status = call.response.status()
-
-            if (!metricsConfig.excludeRoute(route, status?.value)) {
-                TmsApiMetricsCounter.countApiCall(status, route, call.request.resolveSensitivity())
-            }
-
-        }
-    })
+    installMetrics(metricsConfig,TmsApiMetricsCounter)
     if (metricsConfig.setupMetricsRoute) {
         log.info("installerer endepunkt /metrics med defaultregistry")
         routing {
@@ -46,7 +31,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     }
 }
 
-private object TmsApiMetricsCounter {
+private object TmsApiMetricsCounter:Reporter {
     lateinit var config: TmsMetricsConfig
 
     private val counter = Counter.build()
@@ -55,7 +40,7 @@ private object TmsApiMetricsCounter {
         .labelNames("status", "route", "statusgroup", "acr")
         .register()
 
-    fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
+    override fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
         counter.labels("${statusCode?.value ?: "NAN"}", route, config.statusGroup(statusCode, route).tagName, acr)
             .inc()
     }

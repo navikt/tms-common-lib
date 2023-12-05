@@ -120,19 +120,31 @@ class ApiMicrometricsTest {
         testApplication {
             application {
                 assertThrows<IllegalArgumentException> { installTmsMicrometerMetrics {} }
+            }
+        }
+        testApplication {
+            application {
                 assertThrows<IllegalArgumentException> {
                     installTmsMicrometerMetrics { installMicrometerPlugin = true }
                 }
+            }
+        }
+        testApplication {
+            application {
                 assertDoesNotThrow {
                     installTmsMicrometerMetrics {
                         installMicrometerPlugin = true
                         setupMetricsRoute = true
                     }
                 }
-                assertDoesNotThrow { installTmsApiMetrics { setupMetricsRoute = true } }
-
             }
         }
+        testApplication {
+            application {
+                assertDoesNotThrow { installTmsApiMetrics { setupMetricsRoute = true } }
+            }
+        }
+
     }
 
     @Test
