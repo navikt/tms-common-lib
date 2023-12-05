@@ -3,6 +3,7 @@ package nav.no.tms.common.metrics
 import com.auth0.jwt.JWT
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
@@ -145,13 +146,19 @@ internal data class PathParamMask(
 )
 
 internal fun recordableRoute(request: ApplicationRequest) = request.uriWithoutQuery()
-fun RoutingApplicationCall.routeStr(): String {
-    val authenticateRegex = "\\/\\(authenticate [\\\"a-zA-Z]*\\)".toRegex()
-    val methodRegex = "/\\(method:[a-zA-Z]*\\)".toRegex()
-    return route
-        .toString()
-        .replace(authenticateRegex, "")
-        .replace(methodRegex, "")
+
+fun RoutingApplicationCall.routeStr() = route.originalRoute()
+
+fun Route.originalRoute(): String = when (val parentRoute = parent?.originalRoute()) {
+    null -> when (selector) {
+        is TrailingSlashRouteSelector -> "/"
+        else -> "/$selector"
+    }
+    else -> when (selector) {
+        is HttpMethodRouteSelector, is AuthenticationRouteSelector -> "$parentRoute"
+        is TrailingSlashRouteSelector -> if (parentRoute.endsWith('/')) parentRoute else "$parentRoute/"
+        else -> if (parentRoute.endsWith('/')) "$parentRoute$selector" else "$parentRoute/$selector"
+    }
 }
 
 private val uriPattern = "^([^?]+)(?:\\?.*)?\$".toRegex()
@@ -160,9 +167,3 @@ private fun ApplicationRequest.uriWithoutQuery() = uriPattern.find(uri)
     ?.destructured
     ?.component1()
     ?: uri
-
-private fun applyPathParamMask(config: TmsMetricsConfig, route: String): String {
-    return config.pathParamMaskingRules.find { it.routePattern.matches(route) }
-        ?.maskedRoute
-        ?: route
-}

@@ -249,7 +249,7 @@ class ApiMetricsTest {
             }
         }
 
-        client.get("/get/resource/cake/with/id/123")
+        client.get("/get/resource/cake/with/id/123?mything=hello")
         client.get("/get/resource/cookie/with/id/456")
         client.get("/get/resource/fruit/with/id/789")
 
