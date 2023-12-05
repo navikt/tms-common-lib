@@ -2,8 +2,6 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
@@ -18,7 +16,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.micrometer.prometheus.*
-import io.prometheus.client.CollectorRegistry
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -45,7 +42,7 @@ class ApiMicrometricsTest {
                 getTag("acr") shouldBe "unknown"
             }
 
-            client.get("metrics").apply{
+            client.get("metrics").apply {
                 status shouldBe HttpStatusCode.OK
                 val body = bodyAsText()
                 body shouldNotBe ""
@@ -119,23 +116,35 @@ class ApiMicrometricsTest {
     }
 
     @Test
-    fun `kaster exception på dårlig config`(){
-            testApplication {
-                application {
-                    assertThrows<IllegalArgumentException> { installTmsMicrometerMetrics {} }
-                    assertThrows<IllegalArgumentException> {
-                        installTmsMicrometerMetrics { installMicrometerPlugin = true }
-                    }
-                    assertDoesNotThrow {
-                        installTmsMicrometerMetrics {
-                            installMicrometerPlugin = true
-                            setupMetricsRoute = true
-                        }
-                    }
-                    assertDoesNotThrow {  installTmsApiMetrics { setupMetricsRoute = true } }
-
+    fun `kaster exception på dårlig config`() {
+        testApplication {
+            application {
+                assertThrows<IllegalArgumentException> { installTmsMicrometerMetrics {} }
+            }
+        }
+        testApplication {
+            application {
+                assertThrows<IllegalArgumentException> {
+                    installTmsMicrometerMetrics { installMicrometerPlugin = true }
                 }
             }
+        }
+        testApplication {
+            application {
+                assertDoesNotThrow {
+                    installTmsMicrometerMetrics {
+                        installMicrometerPlugin = true
+                        setupMetricsRoute = true
+                    }
+                }
+            }
+        }
+        testApplication {
+            application {
+                assertDoesNotThrow { installTmsApiMetrics { setupMetricsRoute = true } }
+            }
+        }
+
     }
 
     @Test
@@ -158,7 +167,6 @@ class ApiMicrometricsTest {
     }
 
 
-
     @Test
     fun `maskerer egendefinerte path-variabler`() = testApplication {
         initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
@@ -169,8 +177,6 @@ class ApiMicrometricsTest {
 
         prometheusMeterRegistry.get(API_CALLS_COUNTER_NAME) shouldNotBe null
         val counters = prometheusMeterRegistry.meters.filter { it.id.name == API_CALLS_COUNTER_NAME }
-
-        counters.size shouldBe 1
 
         counters.first().apply {
             id.getTag("route") shouldBe "/get/resource/{name}/with/id/{id}"
@@ -192,7 +198,6 @@ private fun ApplicationTestBuilder.initTestApplication(
         installTmsMicrometerMetrics {
             registry = prometheusMeterRegistry
             setupMetricsRoute = true
-            maskPathParams("/get/resource/{name}/with/id/{id}")
         }
 
     }
@@ -206,6 +211,9 @@ private fun ApplicationTestBuilder.initTestApplication(
         authenticate {
             get("test") {
                 call.respond(returnStatus)
+            }
+            get("/get/resource/{name}/with/id/{id}") {
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

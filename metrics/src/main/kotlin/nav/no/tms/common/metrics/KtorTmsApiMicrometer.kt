@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.core.instrument.Counter
@@ -33,24 +32,12 @@ fun Application.installTmsMicrometerMetrics(config: TmsMicrometricsConfig.() -> 
             }
         }
     }
-
-    log.info("Installerer TmsMicrometrics for Ktor")
-    install(createApplicationPlugin(name = "TmsMicrometrics") {
-        on(ResponseSent) { call ->
-
-            val route = recordableRoute(metricsConfig, call.request)
-            val status = call.response.status()
-
-            if (!metricsConfig.excludeRoute(route, status?.value)) {
-                TmsApiMicrometerCounter.countApiCall(status, route, call.request.resolveSensitivity())
-            }
-        }
-    })
+    installMetrics(metricsConfig,TmsApiMicrometerCounter)
 }
 
-private object TmsApiMicrometerCounter {
+private object TmsApiMicrometerCounter: Reporter {
     lateinit var config: TmsMicrometricsConfig
-    fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
+    override fun countApiCall(statusCode: HttpStatusCode?, route: String, acr: String) {
         Counter.builder(API_CALLS_COUNTER_NAME)
             .tag("status", "${statusCode?.value ?: "NAN"}")
             .tag(
@@ -67,6 +54,7 @@ private object TmsApiMicrometerCounter {
 class TmsMicrometricsConfig : TmsMetricsConfig() {
     private var registryWasSupplied = false
     private var performingMicrometerInstallation = false
+
     var installMicrometerPlugin: Boolean = false
         set(value) {
             performingMicrometerInstallation = true
@@ -87,3 +75,7 @@ class TmsMicrometricsConfig : TmsMetricsConfig() {
         }
     }
 }
+
+
+
+
