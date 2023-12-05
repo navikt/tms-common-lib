@@ -2,7 +2,6 @@ package nav.no.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -12,7 +11,34 @@ import nav.no.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
 
 const val API_CALLS_COUNTER_NAME = "tms_api_call"
 
-internal enum class Sensitivity(val knownValues: List<String>) {
+enum class StatusGroup(val tagName: String) {
+    UNRESOLVED("unresolved"), OK("OK"), REDIRECTION("redirection"),
+    CLIENT_ERROR("client_error"), AUTH_ISSUES("auth_issues"), SERVER_ERROR("server_error"),
+    IGNORED("ignored");
+
+    companion object {
+        internal fun HttpStatusCode?.resolveStatusGroup(): StatusGroup =
+            when {
+                this == null -> UNRESOLVED
+                value isInStatusRange 200 -> OK
+                value isInStatusRange 300 -> REDIRECTION
+                value isInStatusRange (400 excluding 401 and 403) -> StatusGroup.CLIENT_ERROR
+                value == 401 || value == 403 -> AUTH_ISSUES
+                value isInStatusRange 500 -> SERVER_ERROR
+                else -> UNRESOLVED
+            }
+
+        infix fun String.belongsTo(ok: StatusGroup) = Pair(this, ok)
+        private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
+        private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
+        private infix fun Int.isInStatusRange(p: Pair<Int, List<Int>>): Boolean =
+            p.second.none { it == this } && this isInStatusRange p.first
+
+        private infix fun Int.excluding(i: Int) = Pair(this, listOf(i))
+
+    }
+}
+internal enum class Sensitivity(private val knownValues: List<String>) {
     HIGH(listOf("level4", "idporten-loa-high")), SUBSTANTIAL(listOf("level3", "idporten-loa-substantial"));
 
     fun contains(acrStr: String?) = knownValues.any { it == acrStr }
@@ -45,35 +71,6 @@ internal enum class Sensitivity(val knownValues: List<String>) {
             }
     }
 }
-
-enum class StatusGroup(val tagName: String) {
-    UNRESOLVED("unresolved"), OK("OK"), REDIRECTION("redirection"),
-    CLIENT_ERROR("client_error"), AUTH_ISSUES("auth_issues"), SERVER_ERROR("server_error"),
-    IGNORED("ignored");
-
-    companion object {
-        internal fun HttpStatusCode?.resolveStatusGroup(): StatusGroup =
-            when {
-                this == null -> UNRESOLVED
-                value isInStatusRange 200 -> OK
-                value isInStatusRange 300 -> REDIRECTION
-                value isInStatusRange (400 excluding 401 and 403) -> StatusGroup.CLIENT_ERROR
-                value == 401 || value == 403 -> AUTH_ISSUES
-                value isInStatusRange 500 -> SERVER_ERROR
-                else -> UNRESOLVED
-            }
-
-        infix fun String.belongsTo(ok: StatusGroup) = Pair(this, ok)
-        private infix fun Pair<Int, List<Int>>.and(i: Int) = this.copy(second = listOf(i) + this.second)
-        private infix fun Int.isInStatusRange(i: Int): Boolean = this >= i && this < (i + 100)
-        private infix fun Int.isInStatusRange(p: Pair<Int, List<Int>>): Boolean =
-            p.second.none { it == this } && this isInStatusRange p.first
-
-        private infix fun Int.excluding(i: Int) = Pair(this, listOf(i))
-
-    }
-}
-
 open class TmsMetricsConfig {
 
     private val customStatusGroupMapping = mutableListOf<StatusGroupMapping>()
@@ -117,7 +114,6 @@ data class StatusGroupMapping(val statusCode: HttpStatusCode, val route: String,
     fun memberGroup(statusCode: HttpStatusCode, route: String): StatusGroup? =
         if (this.statusCode == statusCode && this.comparableRoute == route.trimMargin()) statusGroup else null
 }
-internal fun recordableRoute(request: ApplicationRequest) = request.uriWithoutQuery()
 
 fun RoutingApplicationCall.routeStr() = route.originalRoute()
 
@@ -132,10 +128,3 @@ fun Route.originalRoute(): String = when (val parentRoute = parent?.originalRout
         else -> if (parentRoute.endsWith('/')) "$parentRoute$selector" else "$parentRoute/$selector"
     }
 }
-
-private fun ApplicationRequest.uriWithoutQuery() =
-    "^([^?]+)(?:\\?.*)?\$".toRegex()
-    .find(uri)
-    ?.destructured
-    ?.component1()
-    ?: uri
