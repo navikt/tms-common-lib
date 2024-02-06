@@ -44,7 +44,7 @@ publishing {
     publications {
         create<MavenPublication>("gpr") {
             groupId = "no.nav.tms.common"
-            artifactId = "utils"
+            artifactId = "kubernetes"
             version = libraryVersion
             from(components["java"])
         }
