@@ -26,19 +26,19 @@ internal class EnvVarAsTypeKtTest {
 
     @BeforeEach
     fun setupMock() {
-        mockkObject(SystemWrapper)
+        mockkObject(EnvVarProxy)
     }
 
     @AfterEach
     fun cleanUp() {
-        unmockkObject(SystemWrapper)
+        unmockkObject(EnvVarProxy)
     }
 
     @Test
     fun `Function getEnvVarAsType should map and return correct environment variable if it exists`() {
         val default = 456
 
-        every { SystemWrapper.getEnvVar(envName) } returns rawEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns rawEnvVal
 
         val result = getEnvVarAsType(envName, default, String::toInt)
 
@@ -49,7 +49,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getEnvVarAsType should return default value if provided and variable was not found`() {
         val default = 456
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getEnvVarAsType(envName, default, String::toInt)
 
@@ -58,7 +58,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getEnvVarAsType should throw exception if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         shouldThrow<IllegalStateException> {
             getEnvVarAsType(envName, mapper = String::toInt)
@@ -67,7 +67,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getEnvVarAsType should throw exception if variable could not be mapped`() {
-        every { SystemWrapper.getEnvVar(envName) } returns "onetwothree"
+        every { EnvVarProxy.getEnvVar(envName) } returns "onetwothree"
 
         shouldThrow<IllegalArgumentException> {
             getEnvVarAsType(envName, mapper = String::toInt)
@@ -78,7 +78,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getOptionalEnvVarAsType should return correct environment variable if it exists`() {
         val default = 456
 
-        every { SystemWrapper.getEnvVar(envName) } returns rawEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns rawEnvVal
 
         val result = getOptionalEnvVarAsType(envName, default, String::toInt)
 
@@ -89,7 +89,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getOptionalEnvVarAsType should return default value if provided and variable was not found`() {
         val default = 456
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsType(envName, default, String::toInt)
 
@@ -98,7 +98,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getOptionalEnvVarAsType should return null if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsType(envName, mapper = String::toInt)
 
@@ -107,7 +107,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getOptionalEnvVarAsType should throw exception if variable could not be mapped`() {
-        every { SystemWrapper.getEnvVar(envName) } returns "onetwo"
+        every { EnvVarProxy.getEnvVar(envName) } returns "onetwo"
 
         shouldThrow<IllegalArgumentException> { getEnvVarAsType(envName, mapper = String::toInt) }
     }
@@ -116,7 +116,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getEnvVarAsTypedList should return correct environment variable if it exists`() {
         val default = listOf(1)
 
-        every { SystemWrapper.getEnvVar(envName) } returns rawListEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns rawListEnvVal
 
         val result = getEnvVarAsTypedList(envName, default, mapper = String::toInt)
 
@@ -127,7 +127,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getEnvVarAsTypedList should return default value if provided and variable was not found`() {
         val default = listOf(1)
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getEnvVarAsTypedList(envName, default, mapper = String::toInt)
 
@@ -136,7 +136,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getEnvVarAsTypedList should throw exception if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         shouldThrow<IllegalStateException> {
             getEnvVarAsTypedList(envName, mapper = String::toInt)
@@ -145,7 +145,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getEnvVarAsTypedList should throw exception if variable could not be mapped`() {
-        every { SystemWrapper.getEnvVar(envName) } returns "one,two"
+        every { EnvVarProxy.getEnvVar(envName) } returns "one,two"
 
         shouldThrow<IllegalArgumentException> {
             getEnvVarAsTypedList(envName, mapper = String::toInt)
@@ -156,7 +156,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getEnvVarAsTypedList should allow for different variable separators`() {
         val envVarWithSeparators = "4|5|6"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVarWithSeparators
+        every { EnvVarProxy.getEnvVar(envName) } returns envVarWithSeparators
 
         val expected = listOf(4, 5, 6)
 
@@ -167,7 +167,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getOptionalEnvVarAsTypedList should return correct environment variable if it exists`() {
         val default = listOf(1)
 
-        every { SystemWrapper.getEnvVar(envName) } returns rawListEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns rawListEnvVal
 
         val result = getOptionalEnvVarAsTypedList(envName, default, mapper = String::toInt)
 
@@ -178,7 +178,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getOptionalEnvVarAsTypedList should return default value if provided and variable was not found`() {
         val default = listOf(4, 5)
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsTypedList(envName, default, mapper = String::toInt)
 
@@ -187,7 +187,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getOptionalEnvVarAsTypedList should return empty list if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsTypedList(envName, mapper = String::toInt)
 
@@ -196,7 +196,7 @@ internal class EnvVarAsTypeKtTest {
 
     @Test
     fun `Function getOptionalEnvVarAsTypedList should throw exception if variable could not be mapped`() {
-        every { SystemWrapper.getEnvVar(envName) } returns "one,two"
+        every { EnvVarProxy.getEnvVar(envName) } returns "one,two"
 
         shouldThrow<IllegalArgumentException> {
             getOptionalEnvVarAsTypedList(envName, mapper = String::toInt)
@@ -207,7 +207,7 @@ internal class EnvVarAsTypeKtTest {
     fun `Function getOptionalEnvVarAsTypedList should allow for different variable separators`() {
         val envVarWithSeparators = "7|8|9"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVarWithSeparators
+        every { EnvVarProxy.getEnvVar(envName) } returns envVarWithSeparators
 
         val expected = listOf(7, 8, 9)
 
