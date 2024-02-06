@@ -4,16 +4,19 @@ import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 
+/**
+ * Utility functions for fetching environment values parseable as types other than String
+ */
 internal object TypedEnvVar {
     internal inline fun <reified T> getEnvVarAsType(varName: String, default: T? = null, mapper: (String) -> T): T {
-        return SystemWrapper.getEnvVar(varName)
+        return EnvVarProxy.getEnvVar(varName)
             ?.applyMapper(mapper)
             ?: default
             ?: throw IllegalStateException("Appen kan ikke starte uten av miljøvariabelen $varName er satt.")
     }
 
     internal inline fun <reified T> getOptionalEnvVarAsType(varName: String, default: T? = null, mapper: (String) -> T): T? {
-        return SystemWrapper.getEnvVar(varName)
+        return EnvVarProxy.getEnvVar(varName)
             ?.applyMapper(mapper)
             ?: default
     }
@@ -24,7 +27,7 @@ internal object TypedEnvVar {
         separator: String = ",",
         mapper: (String) -> T
     ): List<T> {
-        return SystemWrapper.getEnvVar(varName)
+        return EnvVarProxy.getEnvVar(varName)
             ?.split(separator)
             ?.map { listEntry -> listEntry.applyMapper(mapper) }
             ?: default
@@ -37,7 +40,7 @@ internal object TypedEnvVar {
         separator: String = ",",
         mapper: (String) -> T
     ): List<T> {
-        return SystemWrapper.getEnvVar(varName)
+        return EnvVarProxy.getEnvVar(varName)
             ?.split(separator)
             ?.map { listEntry -> listEntry.applyMapper(mapper) }
             ?: default

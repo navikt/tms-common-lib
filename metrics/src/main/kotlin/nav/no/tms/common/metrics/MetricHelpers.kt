@@ -123,8 +123,12 @@ fun Route.originalRoute(): String = when (val parentRoute = parent?.originalRout
         else -> "/$selector"
     }
     else -> when (selector) {
-        is HttpMethodRouteSelector, is AuthenticationRouteSelector -> "$parentRoute"
+        is HttpMethodRouteSelector, is AuthenticationRouteSelector -> parentRoute
         is TrailingSlashRouteSelector -> if (parentRoute.endsWith('/')) parentRoute else "$parentRoute/"
-        else -> if (parentRoute.endsWith('/')) "$parentRoute$selector" else "$parentRoute/$selector"
+        else -> when {
+            selector.toString().isBlank() -> parentRoute
+            parentRoute.endsWith('/') -> "$parentRoute$selector"
+            else -> "$parentRoute/$selector"
+        }
     }
 }

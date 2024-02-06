@@ -47,12 +47,12 @@ publishing {
 
 dependencies {
     api(KotlinLogging.logging)
-    implementation(KtorServer.auth)
-    implementation(KtorServer.authJwt)
-    implementation(KtorServer.core)
-    implementation(KtorServer.coreJvm)
-    implementation(KtorServer.metricsMicrometer)
-    implementation(KtorServer.metricsMicrometerJvm)
+    implementation(Ktor.Server.auth)
+    implementation(Ktor.Server.authJwt)
+    implementation(Ktor.Server.core)
+    implementation(Ktor.Server.coreJvm)
+    implementation(Ktor.Server.metricsMicrometer)
+    implementation(Ktor.Server.metricsMicrometerJvm)
     implementation(Prometheus.simpleClient)
     implementation(Micrometer.registryPrometheus)
 
@@ -60,7 +60,7 @@ dependencies {
     testImplementation(Junit.params)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Kotest.runnerJunit)
-    testImplementation(KtorServer.testHost)
+    testImplementation(Ktor.Server.testHost)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

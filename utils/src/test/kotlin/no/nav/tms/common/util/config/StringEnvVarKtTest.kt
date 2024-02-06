@@ -23,19 +23,19 @@ internal class StringEnvVarKtTest {
 
     @BeforeEach
     fun setupMock() {
-        mockkObject(SystemWrapper)
+        mockkObject(EnvVarProxy)
     }
 
     @AfterEach
     fun cleanUp() {
-        unmockkObject(SystemWrapper)
+        unmockkObject(EnvVarProxy)
     }
 
     @Test
     fun `Function getEnvVar should return correct environment variable if it exists`() {
         val default = "otherValue"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVal
+        every { EnvVarProxy.getEnvVar(envName) } returns envVal
 
         val result = getEnvVar(envName, default)
 
@@ -46,7 +46,7 @@ internal class StringEnvVarKtTest {
     fun `Function getEnvVar should return default value if provided and variable was not found`() {
         val default = "otherValue"
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getEnvVar(envName, default)
 
@@ -55,7 +55,7 @@ internal class StringEnvVarKtTest {
 
     @Test
     fun `Function getEnvVar should throw exception if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         shouldThrow<IllegalStateException> {
             getEnvVar(envName)
@@ -66,7 +66,7 @@ internal class StringEnvVarKtTest {
     fun `Function getOptionalEnvVar should return correct environment variable if it exists`() {
         val default = "otherValue"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVal
+        every { EnvVarProxy.getEnvVar(envName) } returns envVal
 
         val result = getOptionalEnvVar(envName, default)
 
@@ -77,7 +77,7 @@ internal class StringEnvVarKtTest {
     fun `Function getOptionalEnvVar should return default value if provided and variable was not found`() {
         val default = "otherValue"
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVar(envName, default)
 
@@ -86,7 +86,7 @@ internal class StringEnvVarKtTest {
 
     @Test
     fun `Function getOptionalEnvVar should return null if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVar(envName)
 
@@ -98,7 +98,7 @@ internal class StringEnvVarKtTest {
         val default = listOf("default")
         val expected = listOf("one", "two", "three")
 
-        every { SystemWrapper.getEnvVar(envName) } returns listEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns listEnvVal
 
 
         val result = getEnvVarAsList(envName, default)
@@ -110,7 +110,7 @@ internal class StringEnvVarKtTest {
     fun `Function getEnvVarAsList should return default value if provided and variable was not found`() {
         val default = listOf("default")
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getEnvVarAsList(envName, default)
 
@@ -119,7 +119,7 @@ internal class StringEnvVarKtTest {
 
     @Test
     fun `Function getEnvVarAsList should throw exception if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         shouldThrow<IllegalStateException> {
             getEnvVarAsList(envName)
@@ -130,7 +130,7 @@ internal class StringEnvVarKtTest {
     fun `Function getEnvVarAsList should allow for different variable separators`() {
         val envVarWithSeparators = "one|two.three|four"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVarWithSeparators
+        every { EnvVarProxy.getEnvVar(envName) } returns envVarWithSeparators
 
         val expectedDefault = listOf("one|two.three|four")
         val expectedPipe = listOf("one", "two.three", "four")
@@ -146,7 +146,7 @@ internal class StringEnvVarKtTest {
         val default = listOf("default")
         val expected = listOf("one", "two", "three")
 
-        every { SystemWrapper.getEnvVar(envName) } returns listEnvVal
+        every { EnvVarProxy.getEnvVar(envName) } returns listEnvVal
 
 
         val result = getOptionalEnvVarAsList(envName, default)
@@ -158,7 +158,7 @@ internal class StringEnvVarKtTest {
     fun `Function getOptionalEnvVarAsList should return default value if provided and variable was not found`() {
         val default = listOf("default")
 
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsList(envName, default)
 
@@ -167,7 +167,7 @@ internal class StringEnvVarKtTest {
 
     @Test
     fun `Function getOptionalEnvVarAsList should return empty list if variable was not found and no default was specified`() {
-        every { SystemWrapper.getEnvVar(envName) } returns null
+        every { EnvVarProxy.getEnvVar(envName) } returns null
 
         val result = getOptionalEnvVarAsList(envName)
 
@@ -178,7 +178,7 @@ internal class StringEnvVarKtTest {
     fun `Function getOptionalEnvVarAsList should allow for different variable separators`() {
         val envVarWithSeparators = "one|two.three|four"
 
-        every { SystemWrapper.getEnvVar(envName) } returns envVarWithSeparators
+        every { EnvVarProxy.getEnvVar(envName) } returns envVarWithSeparators
 
         val expectedDefault = listOf("one|two.three|four")
         val expectedPipe = listOf("one", "two.three", "four")

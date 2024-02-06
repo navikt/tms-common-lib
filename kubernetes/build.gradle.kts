@@ -11,13 +11,19 @@ repositories {
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
+    implementation(Jackson.datatypeJsr310)
+    implementation(Jackson.moduleKotlin)
+    implementation(Ktor.Client.core)
+    implementation(Ktor.Client.contentNegotiation)
+    implementation(Ktor.Client.apache)
+    implementation(Ktor.Serialization.jackson)
     implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
-    implementation(Kotlinx.coroutines)
     testImplementation(kotlin("test-junit5"))
     testImplementation(Junit.engine)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Mockk.mockk)
+    testImplementation(Ktor.Server.testHost)
 }
 
 val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"

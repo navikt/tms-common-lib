@@ -15,19 +15,19 @@ internal class UrlEnvVarTest {
 
     @BeforeEach
     fun setupMock() {
-        mockkObject(SystemWrapper)
+        mockkObject(EnvVarProxy)
     }
 
     @AfterEach
     fun cleanUp() {
-        unmockkObject(SystemWrapper)
+        unmockkObject(EnvVarProxy)
     }
 
     @Test
     fun `Function getEnvVarAsURL should return valid url`() {
         val urlString = "http://domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         val url = UrlEnvVar.getEnvVarAsURL(envVarName)
 
@@ -40,7 +40,7 @@ internal class UrlEnvVarTest {
 
         val urlStringTrimmed = "http://domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         val urlDefault = UrlEnvVar.getEnvVarAsURL(envVarName)
         val urlUntrimmed = UrlEnvVar.getEnvVarAsURL(envVarName, trimTrailingSlash = false)
@@ -55,7 +55,7 @@ internal class UrlEnvVarTest {
     fun `Function getEnvVarAsURL should throw exception if url is malformed`() {
         val urlString = "domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         shouldThrowAny {
             UrlEnvVar.getEnvVarAsURL(envVarName)
@@ -66,7 +66,7 @@ internal class UrlEnvVarTest {
     fun `Function getOptionalEnvVarAsURL should return valid url`() {
         val urlString = "http://domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         val url = UrlEnvVar.getOptionalEnvVarAsURL(envVarName)
 
@@ -79,7 +79,7 @@ internal class UrlEnvVarTest {
 
         val urlStringTrimmed = "http://domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         val urlDefault = UrlEnvVar.getOptionalEnvVarAsURL(envVarName)
         val urlUntrimmed = UrlEnvVar.getOptionalEnvVarAsURL(envVarName, trimTrailingSlash = false)
@@ -94,7 +94,7 @@ internal class UrlEnvVarTest {
     fun `Function getOptionalEnvVarAsURL should throw exception if url is malformed`() {
         val urlString = "domain.com"
 
-        every { SystemWrapper.getEnvVar(envVarName) } returns urlString
+        every { EnvVarProxy.getEnvVar(envVarName) } returns urlString
 
         shouldThrowAny {
             UrlEnvVar.getOptionalEnvVarAsURL(envVarName)

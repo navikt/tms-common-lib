@@ -24,19 +24,6 @@ object Micrometer: DependencyGroup {
     val registryPrometheus = dependency("micrometer-registry-prometheus")
 }
 
-object Caffeine: DependencyGroup {
-    override val version = "3.0.0"
-    override val groupId = "com.github.ben-manes.caffeine"
-
-    val caffeine = dependency("caffeine")
-}
-object Kluent: DependencyGroup {
-    override val version = "1.68"
-    override val groupId = "org.amshove.kluent"
-
-    val kluent = dependency("kluent")
-}
-
 object Kotlin {
     const val version = "1.8.21"
 }
@@ -50,17 +37,42 @@ object Kotest: DependencyGroup {
     val extensions = dependency("kotest-extensions")
 }
 
-object KtorServer: DependencyGroup {
-    override val version = "2.3.2"
-    override val groupId = "io.ktor"
+object Ktor {
+    val version get() = "2.3.7"
+    val groupId get() = "io.ktor"
 
-    val coreJvm = dependency("ktor-server-core-jvm")
-    val metricsMicrometerJvm = dependency("ktor-server-metrics-micrometer-jvm")
-    val core = dependency("ktor-server-core")
-    val auth = dependency("ktor-server-auth")
-    val authJwt = dependency("ktor-server-auth-jwt")
-    val metricsMicrometer = dependency("ktor-server-metrics-micrometer")
-    val testHost = dependency("ktor-server-test-host")
+    object Server: DependencyGroup {
+        override val groupId get() = Ktor.groupId
+        override val version get() = Ktor.version
+
+        val core get() = dependency("ktor-server-core")
+        val coreJvm = dependency("ktor-server-core-jvm")
+        val netty get() = dependency("ktor-server-netty")
+        val defaultHeaders get() = dependency("ktor-server-default-headers")
+        val metricsMicrometer get() = dependency("ktor-server-metrics-micrometer")
+        val metricsMicrometerJvm = dependency("ktor-server-metrics-micrometer-jvm")
+        val auth get() = dependency("ktor-server-auth")
+        val authJwt get() = dependency("ktor-server-auth-jwt")
+        val contentNegotiation get() = dependency("ktor-server-content-negotiation")
+        val statusPages get() = dependency("ktor-server-status-pages")
+        val testHost get() = dependency("ktor-server-test-host")
+    }
+
+    object Client: DependencyGroup {
+        override val groupId get() = Ktor.groupId
+        override val version get() = Ktor.version
+
+        val core get() = dependency("ktor-client-core")
+        val apache get() = dependency("ktor-client-apache")
+        val contentNegotiation get() = dependency("ktor-client-content-negotiation")
+    }
+
+    object Serialization: DependencyGroup {
+        override val groupId get() = Ktor.groupId
+        override val version get() = Ktor.version
+
+        val jackson get() = dependency("ktor-serialization-jackson")
+    }
 }
 
 object KotlinLogging: DependencyGroup {
@@ -81,14 +93,12 @@ object Mockk: DependencyGroup {
     val mockk = "io.mockk:mockk:$version"
 }
 
-object Nimbusds: DependencyGroup {
-    override val version = "9.19"
-    override val groupId = "com.nimbusds"
+object Jackson: DependencyGroup {
+    override val version get() = "2.15.1"
 
-    val joseJwt = dependency("nimbus-jose-jwt")
-    val oauth2OidcSdk =  dependency("oauth2-oidc-sdk")
+    val datatypeJsr310 get() = dependency("jackson-datatype-jsr310", groupId = "com.fasterxml.jackson.datatype")
+    val moduleKotlin get() = dependency("jackson-module-kotlin", groupId = "com.fasterxml.jackson.module")
 }
-
 
 object Junit: DependencyGroup {
     override val version = "5.9.3"
@@ -98,22 +108,12 @@ object Junit: DependencyGroup {
     val engine = dependency("junit-jupiter-engine")
     val params = dependency("junit-jupiter-params")
 }
-object Jjwt: DependencyGroup {
-    override val version = "0.11.2"
-    override val groupId = "io.jsonwebtoken"
-
-    val api = dependency("jjwt-api")
-    val impl = dependency("jjwt-impl")
-    val jackson = dependency("jjwt-jackson")
-}
 
 object Kotlinx: DependencyGroup {
     override val groupId = "org.jetbrains.kotlinx"
 
     val coroutines = "$groupId:kotlinx-coroutines-core:1.3.9"
-    val datetime = "$groupId:kotlinx-datetime:0.3.2"
 }
-
 
 object Logstash: DependencyGroup {
     override val version = "6.4"

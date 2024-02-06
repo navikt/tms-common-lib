@@ -13,4 +13,4 @@ plugins {
 }
 
 rootProject.name = "tms-common-lib"
-include("metrics", "utils", "observability")
+include("metrics", "utils", "observability", "kubernetes")
