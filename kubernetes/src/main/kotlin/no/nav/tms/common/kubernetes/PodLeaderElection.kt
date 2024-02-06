@@ -25,18 +25,14 @@ class PodLeaderElection(
 
     suspend fun isLeader(): Boolean {
         if (shouldQueryForLeader()) {
-            queryForLeader()
+            val response: ElectorResponse = httpClient.get(electionPath).body()
+
+            isLeader = response.name == podName
+
+            previousQuery = Instant.now()
         }
 
         return isLeader
-    }
-
-    private suspend fun queryForLeader() {
-        val response: ElectorResponse = httpClient.get(electionPath).body()
-
-        isLeader = response.name == podName
-
-        previousQuery = Instant.now()
     }
 
     private fun shouldQueryForLeader() =
@@ -59,12 +55,9 @@ class PodLeaderElection(
             install(HttpTimeout)
         }
 
-        private fun getElectionUrl(): String {
-
-            return when (val path = System.getenv("ELECTOR_PATH")) {
-                null -> throw RuntimeException("Fant ikke variabel ELECTOR_PATH")
-                else -> path
-            }
+        private fun getElectionUrl() = when (val path = System.getenv("ELECTOR_PATH")) {
+            null -> throw RuntimeException("Fant ikke variabel ELECTOR_PATH")
+            else -> path
         }
     }
 }
