@@ -57,7 +57,7 @@ class PodLeaderElection(
 
         private fun getElectionUrl() = when (val path = System.getenv("ELECTOR_PATH")) {
             null -> throw RuntimeException("Fant ikke variabel ELECTOR_PATH")
-            else -> path
+            else -> "http://$path"
         }
     }
 }
