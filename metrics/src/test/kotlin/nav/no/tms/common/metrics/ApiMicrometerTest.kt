@@ -166,7 +166,6 @@ class ApiMicrometricsTest {
         }
     }
 
-
     @Test
     fun `maskerer egendefinerte path-variabler`() = testApplication {
         initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
@@ -182,6 +181,21 @@ class ApiMicrometricsTest {
             id.getTag("route") shouldBe "/get/resource/{name}/with/id/{id}"
             (this as PrometheusCounter).count() shouldBe 3
         }
+    }
+
+    @Test
+    fun `ignorer kall med metode HEAD`() = testApplication {
+        initTestApplication(prometheusMeterRegistry = prometheusMeterRegistry)
+
+        client.head("/get/resource/cake/with/id/123")
+        client.head("/get/resource/cookie/with/id/456")
+        client.head("/get/resource/fruit/with/id/789")
+        client.head("/does/not/exist")
+
+        prometheusMeterRegistry.get(API_CALLS_COUNTER_NAME) shouldNotBe null
+        val counters = prometheusMeterRegistry.meters.filter { it.id.name == API_CALLS_COUNTER_NAME }
+
+        counters.size shouldBe 0
     }
 
 }
