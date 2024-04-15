@@ -31,8 +31,11 @@ abstract class ResponseWithErrors(private val errors: String?) {
             )
 
 
-
-        fun <T: ResponseWithErrors> createWithError(constructor: KFunction<T>?, errorMessage: String, className: String): T =
+        fun <T : ResponseWithErrors> createWithError(
+            constructor: KFunction<T>?,
+            errorMessage: String,
+            className: String
+        ): T =
             constructor?.let {
                 val params = constructor.parameters
                 require(params.any { it.name == "errors" })
@@ -80,7 +83,6 @@ abstract class ResponseWithErrors(private val errors: String?) {
                     throw IllegalArgumentException("No default value defined for list of type $elementType")
                 }
             }
-
             else -> throw IllegalArgumentException("No default value defined for parameter of type $this")
         }
 
