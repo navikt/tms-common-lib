@@ -1,3 +1,5 @@
+package logging
+
 import io.github.oshai.kotlinlogging.*
 
 class TmsSecureLog private constructor(private val delegate: KLogger) : KLogger by delegate {
@@ -29,14 +31,14 @@ class TmsLog private constructor(private val delegate: KLogger) : KLogger by del
     }
 
     companion object {
-        fun getLog(func: () -> Unit) = KotlinLogging.logger(func)
+        fun getLog(func: () -> Unit) = TmsLog(KotlinLogging.logger(func))
     }
 }
 
 
-open class LoggableException(val originalThrowable: Throwable) : Throwable() {
+abstract class LoggableException(val originalThrowable: Throwable) : Throwable() {
 
-    val summary: String = stackTraceSummary(originalThrowable)
+    abstract val summary: String
 
     companion object {
         fun stackTraceSummary(throwable: Throwable) =
