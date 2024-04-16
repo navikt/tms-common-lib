@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
@@ -6,7 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
-import nav.no.tms.common.metrics.Sensitivity.Companion.resolveSensitivity
+import no.nav.tms.common.metrics.Sensitivity.Companion.resolveSensitivity
 
 internal fun Application.installMetrics(metricsConfig: TmsMetricsConfig, reporter: Reporter) {
     log.info("Installerer TmsApiMicrometrics for Ktor")

@@ -1,4 +1,4 @@
-package nav.no.tms.common.observability
+package no.nav.tms.common.observability
 
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.serialization.*

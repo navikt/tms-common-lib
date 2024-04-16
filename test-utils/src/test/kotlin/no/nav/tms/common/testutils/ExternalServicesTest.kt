@@ -1,13 +1,9 @@
-package nav.no.tms.common.testutils
+package no.nav.tms.common.testutils
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.HttpStatusCode.Companion.InternalServerError
-import io.ktor.http.HttpStatusCode.Companion.MethodNotAllowed
-import io.ktor.http.HttpStatusCode.Companion.MultiStatus
-import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
@@ -45,14 +41,14 @@ class ExternalServicesTest {
     fun `setter opp ruter med forskjellige statuskoder`() = testApplication {
         initExternalServices(
             testHost,
-            StatusTestRouteProvider("servererror", InternalServerError),
-            StatusTestRouteProvider("multi", MultiStatus),
-            StatusTestRouteProvider("not/allowed", MethodNotAllowed),
+            StatusTestRouteProvider("servererror", HttpStatusCode.InternalServerError),
+            StatusTestRouteProvider("multi", HttpStatusCode.MultiStatus),
+            StatusTestRouteProvider("not/allowed", HttpStatusCode.MethodNotAllowed),
         )
 
-        client.get("$testHost/servererror").status shouldBe InternalServerError
-        client.get("$testHost/multi").status shouldBe MultiStatus
-        client.get("$testHost/not/allowed").status shouldBe MethodNotAllowed
+        client.get("$testHost/servererror").status shouldBe HttpStatusCode.InternalServerError
+        client.get("$testHost/multi").status shouldBe HttpStatusCode.MultiStatus
+        client.get("$testHost/not/allowed").status shouldBe HttpStatusCode.MethodNotAllowed
     }
 
     @Test
@@ -64,12 +60,14 @@ class ExternalServicesTest {
         )
 
         assertThrows<AssertionFailedError> { client.get("$testHost/assert") }
-        assertThrows<AssertionFailedError> { client.get("$testHost/assert"){
-            setBody("Not as stringy as you'd think")
-        } }
-        client.get("$testHost/assert"){
+        assertThrows<AssertionFailedError> {
+            client.get("$testHost/assert") {
+                setBody("Not as stringy as you'd think")
+            }
+        }
+        client.get("$testHost/assert") {
             setBody("Stringy string")
-        }.status shouldBe OK
+        }.status shouldBe HttpStatusCode.OK
     }
 
 

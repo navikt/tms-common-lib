@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 
 import io.ktor.http.*
@@ -14,7 +14,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     val metricsConfig = TmsMetricsConfig().apply(config)
     TmsApiMetricsCounter.config = metricsConfig
     log.info("Installerer api metrics")
-    installMetrics(metricsConfig,TmsApiMetricsCounter)
+    installMetrics(metricsConfig, TmsApiMetricsCounter)
     if (metricsConfig.setupMetricsRoute) {
         log.info("installerer endepunkt /metrics med defaultregistry")
         routing {
@@ -28,7 +28,7 @@ fun Application.installTmsApiMetrics(config: TmsMetricsConfig.() -> Unit) {
     }
 }
 
-private object TmsApiMetricsCounter:Reporter {
+private object TmsApiMetricsCounter: Reporter {
     lateinit var config: TmsMetricsConfig
 
     private val counter = Counter.build()

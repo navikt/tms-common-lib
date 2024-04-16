@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
@@ -22,7 +22,9 @@ import io.ktor.server.testing.*
 import io.prometheus.client.Collector.MetricFamilySamples.Sample
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.CollectorRegistry.defaultRegistry
-import nav.no.tms.common.metrics.StatusGroup.Companion.belongsTo
+import no.nav.tms.common.metrics.StatusGroup
+import no.nav.tms.common.metrics.StatusGroup.Companion.belongsTo
+import no.nav.tms.common.metrics.installTmsApiMetrics
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource

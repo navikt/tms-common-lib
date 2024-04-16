@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -9,7 +9,7 @@ import io.ktor.server.routing.*
 import io.micrometer.core.instrument.Counter
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import nav.no.tms.common.metrics.Sensitivity.Companion.resolveSensitivity
+import no.nav.tms.common.metrics.Sensitivity.Companion.resolveSensitivity
 
 
 fun Application.installTmsMicrometerMetrics(config: TmsMicrometricsConfig.() -> Unit) {
@@ -32,7 +32,7 @@ fun Application.installTmsMicrometerMetrics(config: TmsMicrometricsConfig.() -> 
             }
         }
     }
-    installMetrics(metricsConfig,TmsApiMicrometerCounter)
+    installMetrics(metricsConfig, TmsApiMicrometerCounter)
 }
 
 private object TmsApiMicrometerCounter: Reporter {

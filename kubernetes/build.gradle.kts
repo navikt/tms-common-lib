@@ -18,7 +18,6 @@ dependencies {
     implementation(Ktor.Client.apache)
     implementation(Ktor.Serialization.jackson)
     implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
     testImplementation(kotlin("test-junit5"))
     testImplementation(Junit.engine)
     testImplementation(Kotest.assertionsCore)
@@ -58,8 +57,8 @@ publishing {
     }
 }
 
-java {
-    toolchain {
+kotlin {
+    jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }

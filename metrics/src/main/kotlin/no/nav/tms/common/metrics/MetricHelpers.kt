@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import io.ktor.http.*
@@ -6,7 +6,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import nav.no.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
+import no.nav.tms.common.metrics.StatusGroup.Companion.resolveStatusGroup
 
 
 const val API_CALLS_COUNTER_NAME = "tms_api_call"
@@ -22,7 +22,7 @@ enum class StatusGroup(val tagName: String) {
                 this == null -> UNRESOLVED
                 value isInStatusRange 200 -> OK
                 value isInStatusRange 300 -> REDIRECTION
-                value isInStatusRange (400 excluding 401 and 403) -> StatusGroup.CLIENT_ERROR
+                value isInStatusRange (400 excluding 401 and 403) -> CLIENT_ERROR
                 value == 401 || value == 403 -> AUTH_ISSUES
                 value isInStatusRange 500 -> SERVER_ERROR
                 else -> UNRESOLVED
@@ -66,7 +66,7 @@ internal enum class Sensitivity(private val knownValues: List<String>) {
                     val jwtClaim = JWT.decode(authHeaderArray[1])
                         ?.getClaim("acr")
                         ?.asString()
-                    Sensitivity.sensitivityString(jwtClaim)
+                    sensitivityString(jwtClaim)
                 }
             }
     }

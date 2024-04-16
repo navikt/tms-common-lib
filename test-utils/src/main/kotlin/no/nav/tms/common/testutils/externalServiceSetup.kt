@@ -1,4 +1,4 @@
-package nav.no.tms.common.testutils
+package no.nav.tms.common.testutils
 
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK

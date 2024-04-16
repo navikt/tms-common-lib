@@ -1,4 +1,4 @@
-package nav.no.tms.common.metrics
+package no.nav.tms.common.metrics
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
@@ -16,6 +16,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.micrometer.prometheus.*
+import no.nav.tms.common.metrics.API_CALLS_COUNTER_NAME
+import no.nav.tms.common.metrics.installTmsApiMetrics
+import no.nav.tms.common.metrics.installTmsMicrometerMetrics
 import org.junit.jupiter.api.*
 import java.util.*
 

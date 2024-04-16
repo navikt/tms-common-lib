@@ -12,7 +12,6 @@ repositories {
 dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
     implementation(Kotlinx.coroutines)
     testImplementation(kotlin("test-junit5"))
     testImplementation(Junit.engine)
@@ -52,8 +51,8 @@ publishing {
     }
 }
 
-java {
-    toolchain {
+kotlin {
+    jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
