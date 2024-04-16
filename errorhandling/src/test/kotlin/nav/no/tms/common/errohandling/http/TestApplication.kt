@@ -4,16 +4,14 @@ import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import nav.no.tms.common.errohandling.http.ApiException.Companion.tmsResponseCode
 import nav.no.tms.common.errohandling.logging.TmsLog
 import nav.no.tms.common.errohandling.logging.TmsSecureLog
+import nav.no.tms.common.errohandling.nav.no.tms.common.errohandling.http.installTmsStatusPages
 import nav.no.tms.common.testutils.RouteProvider
 import nav.no.tms.common.testutils.initExternalServices
-import java.lang.Thread.sleep
 
 object TestApplication {
     const val serverErrorRoute = "servererror"
@@ -74,22 +72,11 @@ object TestApplication {
             }
         }
 
-  //      val secureLog = TmsSecureLog.getSecureLog()
         val tmsLog = TmsLog.getLog {  }
+        val secureLog = TmsSecureLog.getSecureLog()
 
         application {
-            install(StatusPages) {
-                exception<Throwable> { call, cause ->
-                    when (cause) {
-                        is ApiException -> {
-                        //    secureLog.error(cause)
-                            tmsLog.error(cause)
-                            call.respond(cause.statusCode)
-                        }
-                        else -> call.respond(HttpStatusCode.InternalServerError)
-                    }
-                }
-            }
+            installTmsStatusPages(secureLog,tmsLog)
             routes(httpClient)
         }
 

@@ -15,6 +15,8 @@ dependencies {
     implementation(Ktor.Server.statusPages)
     implementation(Kotlin.reflect)
     implementation(KotlinLogging.logging)
+    implementation(Logback.classic)
+    implementation(Logstash.logbackEncoder)
 
 
     testImplementation(Junit.engine)

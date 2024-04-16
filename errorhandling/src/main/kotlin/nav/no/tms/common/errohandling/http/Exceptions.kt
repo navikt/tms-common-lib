@@ -6,7 +6,12 @@ import nav.no.tms.common.errohandling.logging.LoggableException
 import nav.no.tms.common.errohandling.redactedMessage
 
 
-class ApiException(service: String, url: String, originalThrowable: Throwable, val statusCode: HttpStatusCode) :
+class ServiceRequestException(
+    service: String,
+    url: String,
+    originalThrowable: Throwable,
+    val statusCode: HttpStatusCode
+) :
     LoggableException(originalThrowable) {
     constructor(service: String, url: String, clientRequestException: ClientRequestException) : this(
         service,
@@ -14,6 +19,7 @@ class ApiException(service: String, url: String, originalThrowable: Throwable, v
         clientRequestException,
         clientRequestException.response.status.tmsResponseCode()
     )
+
     constructor(service: String, url: String, serverResponseException: ServerResponseException) : this(
         service,
         url,
@@ -26,7 +32,7 @@ class ApiException(service: String, url: String, originalThrowable: Throwable, v
     }
 
     override val summary: String =
-        """ Feil i kall til $service med url ${url.redactedMessage(true)}
+        """ Kall til $service med url ${url.redactedMessage(true)} feiler
             ${stackTraceSummary(originalThrowable)}
     """.trimIndent()
 
@@ -41,3 +47,11 @@ class ApiException(service: String, url: String, originalThrowable: Throwable, v
     }
 }
 
+class ApiException(originalThrowable: Throwable, private val url: String) : LoggableException(originalThrowable) {
+    override val summary: String
+        get() =
+            """ Kall til url ${url.redactedMessage(true)}
+            ${stackTraceSummary(originalThrowable)}
+    """.trimIndent()
+
+}

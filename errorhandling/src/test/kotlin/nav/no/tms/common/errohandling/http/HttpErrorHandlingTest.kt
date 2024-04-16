@@ -31,7 +31,6 @@ class HttpErrorHandlingTest {
             client.get(redirectRoute).status shouldBe HttpStatusCode.InternalServerError
             client.get(serverErrorRoute).status shouldBe HttpStatusCode.ServiceUnavailable
             client.get(okRoute).status shouldBe HttpStatusCode.OK
-            //client.get(timeoutRoute).status shouldBe HttpStatusCode.ServiceUnavailable TODO: teste  timeout
         }
     }
 }

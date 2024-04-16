@@ -6,7 +6,7 @@ import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.http.HttpStatusCode.Companion.ServiceUnavailable
 import io.ktor.http.HttpStatusCode.Companion.TemporaryRedirect
 import io.ktor.http.HttpStatusCode.Companion.Unauthorized
-import nav.no.tms.common.errohandling.http.ApiException.Companion.tmsResponseCode
+import nav.no.tms.common.errohandling.http.ServiceRequestException.Companion.tmsResponseCode
 import org.junit.jupiter.api.Test
 
 class ApiExceptionTest {
