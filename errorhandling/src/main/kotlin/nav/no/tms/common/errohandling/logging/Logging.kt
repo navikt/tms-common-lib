@@ -1,5 +1,4 @@
-package logging
-
+package nav.no.tms.common.errohandling.logging
 import io.github.oshai.kotlinlogging.*
 
 class TmsSecureLog private constructor(private val delegate: KLogger) : KLogger by delegate {

@@ -1,9 +1,5 @@
-fun main() {
-    val log = TmsSecureLog.getSecureLog()
-    LoggableException(IllegalArgumentException()).apply {
-        log.secureLogInfo()
-    }
-}
+package nav.no.tms.common.errohandling
+
 
 fun String.redactedMessage(keepAll: Boolean = false): String =
     replace(Regex("\\d{11}"), "**REDACTED**")

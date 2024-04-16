@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation(Ktor.Server.core)
     implementation(Ktor.Client.core)
+    implementation(Ktor.Server.statusPages)
     implementation(Kotlin.reflect)
     implementation(KotlinLogging.logging)
 
@@ -19,6 +20,8 @@ dependencies {
     testImplementation(Junit.engine)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Kotest.runnerJunit)
+    testImplementation(KtorTest.serverTestHost)
+    testImplementation(Mockk.mockk)
     testImplementation(project(":test-utils"))
 
 }

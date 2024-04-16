@@ -1,7 +1,7 @@
 package nav.no.tms.common.errohandling.http
 
 import io.ktor.client.statement.*
-import redactedMessage
+import nav.no.tms.common.errohandling.redactedMessage
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubtypeOf

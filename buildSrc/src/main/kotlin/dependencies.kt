@@ -123,3 +123,10 @@ object Logstash : DependencyGroup {
     override val version = "6.4"
     val logbackEncoder = "net.logstash.logback:logstash-logback-encoder:$version"
 }
+
+object KtorTest : DependencyGroup {
+    override val version get() = Ktor.version
+    override val groupId get() = Ktor.groupId
+    val serverTestHost get() = dependency("ktor-server-test-host")
+
+}
