@@ -41,6 +41,13 @@ publishing {
             artifactId = "observability"
             version = libraryVersion
             from(components["java"])
+
+            val sourcesJar by tasks.creating(Jar::class) {
+                archiveClassifier.set("sources")
+                from(sourceSets.main.get().allSource)
+            }
+
+            artifact(sourcesJar)
         }
     }
 }
@@ -64,8 +71,8 @@ dependencies {
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
-java {
-    toolchain {
+kotlin {
+    jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }

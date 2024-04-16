@@ -16,8 +16,6 @@ dependencies {
     implementation(Kotlin.reflect)
     implementation(KotlinLogging.logging)
     implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
-
 
     testImplementation(Junit.engine)
     testImplementation(Kotest.assertionsCore)

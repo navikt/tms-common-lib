@@ -12,7 +12,6 @@ repositories {
 dependencies {
     api(kotlin("stdlib-jdk8"))
     implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
     implementation(Kotlinx.coroutines)
     testImplementation(kotlin("test-junit5"))
     testImplementation(Junit.engine)
@@ -41,12 +40,19 @@ publishing {
             artifactId = "utils"
             version = libraryVersion
             from(components["java"])
+
+            val sourcesJar by tasks.creating(Jar::class) {
+                archiveClassifier.set("sources")
+                from(sourceSets.main.get().allSource)
+            }
+
+            artifact(sourcesJar)
         }
     }
 }
 
-java {
-    toolchain {
+kotlin {
+    jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }

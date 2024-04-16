@@ -18,7 +18,6 @@ dependencies {
     implementation(Ktor.Client.apache)
     implementation(Ktor.Serialization.jackson)
     implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
     testImplementation(kotlin("test-junit5"))
     testImplementation(Junit.engine)
     testImplementation(Kotest.assertionsCore)
@@ -47,12 +46,19 @@ publishing {
             artifactId = "kubernetes"
             version = libraryVersion
             from(components["java"])
+
+            val sourcesJar by tasks.creating(Jar::class) {
+                archiveClassifier.set("sources")
+                from(sourceSets.main.get().allSource)
+            }
+
+            artifact(sourcesJar)
         }
     }
 }
 
-java {
-    toolchain {
+kotlin {
+    jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
