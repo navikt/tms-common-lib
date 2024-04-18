@@ -1,5 +1,7 @@
 package no.nav.tms.common.errorhandling.logging
+
 import io.github.oshai.kotlinlogging.*
+import no.nav.tms.common.errorhandling.redactedMessage
 
 class TmsSecureLog private constructor(private val delegate: KLogger) : KLogger by delegate {
     init {
@@ -27,6 +29,24 @@ class TmsLog private constructor(private val delegate: KLogger) : KLogger by del
 
     fun warning(loggableException: LoggableException) {
         this.warn { loggableException.summary }
+    }
+
+    override fun info(message: () -> Any?) {
+        val result = message()
+        if (result is String) {
+            super.info { result.redactedMessage(true) }
+        } else {
+            super.info(message)
+        }
+    }
+
+    override fun error(message: () -> Any?) {
+        val result = message()
+        if (result is String) {
+            super.error { result.redactedMessage(true) }
+        } else {
+            super.info(message)
+        }
     }
 
     companion object {
