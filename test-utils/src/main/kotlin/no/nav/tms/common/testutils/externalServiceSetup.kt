@@ -16,12 +16,14 @@ import io.ktor.util.pipeline.*
  * @property statusCode statuscode for the response
  * @property assert function for assertions on requests (optional)
  */
+typealias HTTPVerb = Routing.(
+    path: String,
+    suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit
+) -> Route
+
 abstract class RouteProvider(
     val path: String,
-    private val routeMethodFunction: Routing.(
-        path: String,
-        suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit
-    ) -> Unit,
+    private val routeMethodFunction: HTTPVerb,
     private val statusCode: HttpStatusCode = OK,
     private val assert: suspend (ApplicationCall) -> Unit = {}
 ) {
