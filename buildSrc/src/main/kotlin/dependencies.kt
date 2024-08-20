@@ -18,7 +18,7 @@ object Prometheus: DependencyGroup {
 }
 
 object Micrometer: DependencyGroup {
-    override val version = "1.12.5"
+    override val version = "1.13.3"
     override val groupId = "io.micrometer"
 
     val registryPrometheus = dependency("micrometer-registry-prometheus")
@@ -30,7 +30,7 @@ object Kotlin {
 
 object Kotest: DependencyGroup {
     override val groupId = "io.kotest"
-    override val version = "5.8.1"
+    override val version = "5.9.1"
 
     val runnerJunit = dependency("kotest-runner-junit5")
     val assertionsCore = dependency("kotest-assertions-core")
@@ -38,7 +38,7 @@ object Kotest: DependencyGroup {
 }
 
 object Ktor {
-    val version get() = "2.3.10"
+    val version get() = "2.3.12"
     val groupId get() = "io.ktor"
 
     object Server: DependencyGroup {
@@ -77,31 +77,31 @@ object Ktor {
 
 object KotlinLogging: DependencyGroup {
     override val groupId = "io.github.oshai"
-    override val version = "6.0.4"
+    override val version = "7.0.0"
 
     val logging = dependency("kotlin-logging")
 }
 
 
 object Logback: DependencyGroup {
-    override val version = "1.5.4"
+    override val version = "1.5.7"
     val classic = "ch.qos.logback:logback-classic:$version"
 }
 
 object Mockk: DependencyGroup {
-    override val version = "1.12.3"
+    override val version = "1.13.12"
     val mockk = "io.mockk:mockk:$version"
 }
 
 object Jackson: DependencyGroup {
-    override val version get() = "2.17.0"
+    override val version get() = "2.17.2"
 
     val datatypeJsr310 get() = dependency("jackson-datatype-jsr310", groupId = "com.fasterxml.jackson.datatype")
     val moduleKotlin get() = dependency("jackson-module-kotlin", groupId = "com.fasterxml.jackson.module")
 }
 
 object Junit: DependencyGroup {
-    override val version = "5.10.2"
+    override val version = "5.11.0"
     override val groupId = "org.junit.jupiter"
 
     val api = dependency("junit-jupiter-api")
@@ -112,5 +112,5 @@ object Junit: DependencyGroup {
 object Kotlinx: DependencyGroup {
     override val groupId = "org.jetbrains.kotlinx"
 
-    val coroutines = dependency("kotlinx-coroutines-core", version = "1.8.0")
+    val coroutines = dependency("kotlinx-coroutines-core", version = "1.8.1")
 }

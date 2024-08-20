@@ -15,10 +15,9 @@ import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.micrometer.prometheus.*
-import no.nav.tms.common.metrics.API_CALLS_COUNTER_NAME
-import no.nav.tms.common.metrics.installTmsApiMetrics
-import no.nav.tms.common.metrics.installTmsMicrometerMetrics
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusCounter
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -258,7 +257,3 @@ private fun generateToken(
     .withIssuer(issuer)
     .withClaim("acr", acr)
     .sign(Algorithm.HMAC256(secret))
-
-private fun allRoutes(root: Route): List<Route> {
-    return listOf(root) + root.children.flatMap { allRoutes(it) }
-}
