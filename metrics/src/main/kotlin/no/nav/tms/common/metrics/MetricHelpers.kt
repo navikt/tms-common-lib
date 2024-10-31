@@ -115,9 +115,9 @@ data class StatusGroupMapping(val statusCode: HttpStatusCode, val route: String,
         if (this.statusCode == statusCode && this.comparableRoute == route.trimMargin()) statusGroup else null
 }
 
-fun RoutingApplicationCall.routeStr() = route.originalRoute()
+fun RoutingCall.routeStr() = route.originalRoute()
 
-fun Route.originalRoute(): String = when (val parentRoute = parent?.originalRoute()) {
+fun RoutingNode.originalRoute(): String = when (val parentRoute = parent?.originalRoute()) {
     null -> when (selector) {
         is TrailingSlashRouteSelector -> "/"
         else -> "/$selector"
