@@ -18,7 +18,7 @@ import io.ktor.util.pipeline.*
  */
 typealias HTTPVerb = Routing.(
     path: String,
-    suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit
+    suspend RoutingContext.() -> Unit
 ) -> Route
 
 abstract class RouteProvider(
@@ -88,7 +88,6 @@ abstract class GraphQlRouteProvider(
         }
     """.trimIndent()
 }
-
 
 fun ApplicationTestBuilder.initExternalServices(
     testHost:String,

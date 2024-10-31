@@ -15,7 +15,7 @@ internal fun Application.installMetrics(metricsConfig: TmsMetricsConfig, reporte
         val log = KotlinLogging.logger { }
 
 
-        on(MonitoringEvent(Routing.RoutingCallStarted)) {
+        on(MonitoringEvent(RoutingRoot.RoutingCallStarted)) {
             it.attributes.put(TmsMetricsConfig.routeKey, it.routeStr())
         }
 

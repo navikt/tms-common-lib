@@ -38,7 +38,7 @@ object Kotest: DependencyGroup {
 }
 
 object Ktor {
-    val version get() = "2.3.12"
+    val version get() = "3.0.1"
     val groupId get() = "io.ktor"
 
     object Server: DependencyGroup {
@@ -84,12 +84,12 @@ object KotlinLogging: DependencyGroup {
 
 
 object Logback: DependencyGroup {
-    override val version = "1.5.7"
+    override val version = "1.5.12"
     val classic = "ch.qos.logback:logback-classic:$version"
 }
 
 object Mockk: DependencyGroup {
-    override val version = "1.13.12"
+    override val version = "1.13.13"
     val mockk = "io.mockk:mockk:$version"
 }
 
