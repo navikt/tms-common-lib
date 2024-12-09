@@ -5,8 +5,6 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
-import io.kotest.matchers.collections.shouldNotContainInOrder
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.*
@@ -19,12 +17,13 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.prometheus.client.Collector.MetricFamilySamples.Sample
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.CollectorRegistry.defaultRegistry
-import no.nav.tms.common.metrics.StatusGroup
+import io.prometheus.metrics.model.registry.MetricNameFilter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry.defaultRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot.CounterDataPointSnapshot
+import io.prometheus.metrics.model.snapshots.DataPointSnapshot
+import io.prometheus.metrics.model.snapshots.Labels
 import no.nav.tms.common.metrics.StatusGroup.Companion.belongsTo
-import no.nav.tms.common.metrics.installTmsApiMetrics
 import org.junit.jupiter.api.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -42,17 +41,17 @@ class ApiMetricsTest {
             client.getwithAuthHeader(acr = "unknown")
 
             val collected =
-                defaultRegistry.metricFamilySamples().asIterator().next().samples.first()
+                defaultRegistry.scrape().first().dataPoints.first().labels
             require(collected != null)
             collected.apply {
-                labelNames[0] shouldBe "status"
-                labelValues[0] shouldBe "200"
-                labelNames[1] shouldBe "route"
-                labelValues[1] shouldBe "/test"
-                labelNames[2] shouldBe "statusgroup"
-                labelValues[2] shouldBe "OK"
-                labelNames[3] shouldBe "acr"
-                labelValues[3] shouldBe "unknown"
+                getName(0) shouldBe "acr"
+                getValue(0) shouldBe "unknown"
+                getName(1) shouldBe "route"
+                getValue(1) shouldBe "/test"
+                getName(2) shouldBe "status"
+                getValue(2) shouldBe "200"
+                getName(3) shouldBe "statusgroup"
+                getValue(3) shouldBe "OK"
             }
         }
 
@@ -63,19 +62,19 @@ class ApiMetricsTest {
             initTestApplication()
 
             client.getwithAuthHeader(acr = "level4")
-            defaultRegistry.assertCounterValue(1) { labelValues[3] == "high" }
+            defaultRegistry.assertCounterValue(1) { getName(3) == "high" }
 
             client.getwithAuthHeader(acr = "idporten-loa-high")
-            defaultRegistry.assertCounterValue(2) { labelValues[3] == "high" }
+            defaultRegistry.assertCounterValue(2) { getName(3) == "high" }
 
             client.getwithAuthHeader(acr = "idporten-loa-substantial")
-            defaultRegistry.assertCounterValue(1) { labelValues[3] == "substantial" }
+            defaultRegistry.assertCounterValue(1) { getName(3) == "substantial" }
 
             client.getwithAuthHeader(acr = "level3")
-            defaultRegistry.assertCounterValue(2) { labelValues[3] == "substantial" }
+            defaultRegistry.assertCounterValue(2) { getName(3) == "substantial" }
 
             client.get("/test")
-            defaultRegistry.assertCounterValue(1) { labelValues[3] == "NA" }
+            defaultRegistry.assertCounterValue(1) { getName(3) == "NA" }
 
         }
 
@@ -86,13 +85,12 @@ class ApiMetricsTest {
         initTestApplication(code.returnStatus)
         client.getwithAuthHeader(acr = "something")
 
-        val sample = defaultRegistry.metricFamilySamples().asIterator().next().samples.find {
-            it.labelValues[0] == code.expectedStatusString
+        val sample = defaultRegistry.scrape().first().dataPoints.find {
+            it.labels.getValue(2) == code.expectedStatusString
         }
 
         require(sample != null)
-        sample.labelValues[2] shouldBe code.expectedStatusGroup
-
+        sample.labels.getValue(3) shouldBe code.expectedStatusGroup
     }
 
     @Test
@@ -100,6 +98,7 @@ class ApiMetricsTest {
     fun `installerer med endpunkt`() = testApplication {
         application {
             installTmsApiMetrics { setupMetricsRoute = true }
+
             install(Authentication) {
                 jwt {
                     skipWhen { true }
@@ -120,7 +119,6 @@ class ApiMetricsTest {
         client.get("metrics").apply {
             status shouldBe HttpStatusCode.OK
             bodyAsText() shouldNotBe ""
-
         }
 
     }
@@ -154,9 +152,9 @@ class ApiMetricsTest {
             client.get("dontignore")
             client.get("dontignoreforthisstatus")
 
-            defaultRegistry.assertCounterValue(0) { labelValues[1] == "/ignore" }
-            defaultRegistry.assertCounterValue(1) { labelValues[1] == "/dontignore" }
-            defaultRegistry.assertCounterValue(1) { labelValues[1] == "/dontignoreforthisstatus" }
+            defaultRegistry.assertCounterValue(0) { getValue(1) == "/ignore" }
+            defaultRegistry.assertCounterValue(1) { getValue(1) == "/dontignore" }
+            defaultRegistry.assertCounterValue(1) { getValue(1) == "/dontignoreforthisstatus" }
         }
     }
 
@@ -192,12 +190,13 @@ class ApiMetricsTest {
             client.get("map")
             client.get("map")
 
-            val metrics = defaultRegistry.metricFamilySamples()
-                .nextElement().samples.filter { it.name == "tms_api_call_total" && it.labelValues[1] == "/map" }
+            val metrics = defaultRegistry.scrape().first { it.metadata.name == "tms_api_call" }
+                .dataPoints.map { it as CounterDataPointSnapshot }
+                .filter { it.labels.getValue(1) == "/map" }
 
-            metrics.find { it.labelValues[2] == StatusGroup.OK.tagName }?.value shouldBe 2
-            metrics.find { it.labelValues[2] == StatusGroup.IGNORED.tagName }?.value shouldBe 1
-            metrics.find { it.labelValues[2] == StatusGroup.SERVER_ERROR.tagName }?.value shouldBe 1
+            metrics.find { it.labels.getValue(3) == StatusGroup.OK.tagName }?.value shouldBe 2
+            metrics.find { it.labels.getValue(3) == StatusGroup.IGNORED.tagName }?.value shouldBe 1
+            metrics.find { it.labels.getValue(3) == StatusGroup.SERVER_ERROR.tagName }?.value shouldBe 1
 
         }
     }
@@ -219,7 +218,7 @@ class ApiMetricsTest {
         client.get("query/endpoint?param2=world")
         client.get("query/endpoint?param1=hello&param2=world")
 
-        val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
+        val routeLabelValues = defaultRegistry.labelValues("tms_api_call", "route")
 
         routeLabelValues shouldContain "/query/endpoint"
 
@@ -228,8 +227,9 @@ class ApiMetricsTest {
         routeLabelValues shouldNotContain "query/endpoint?param1=hello&param2=world"
 
 
-        defaultRegistry.metricFamilySamples()
-            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/query/endpoint" }
+        defaultRegistry.scrape().first { it.metadata.name == "tms_api_call" }
+            .dataPoints.find { it.labels.getValue(1) == "/query/endpoint" }
+            ?.let { it as CounterDataPointSnapshot }
             ?.value shouldBe 3
     }
 
@@ -255,11 +255,12 @@ class ApiMetricsTest {
         client.get("/get/resource/cookie/with/id/456")
         client.get("/get/resource/fruit/with/id/789")
 
-        defaultRegistry.metricFamilySamples()
-            .nextElement().samples.find { it.name == "tms_api_call_total" && it.labelValues[1] == "/get/resource/{name}/with/id/{id}" }
+        defaultRegistry.scrape().first { it.metadata.name == "tms_api_call" }
+            .dataPoints.find { it.labels.getValue(1) == "/get/resource/{name}/with/id/{id}" }
+            ?.let { it as CounterDataPointSnapshot }
             ?.value shouldBe 3
 
-        val routeLabelValues = defaultRegistry.labelValues("tms_api_call_total", "route")
+        val routeLabelValues = defaultRegistry.labelValues("tms_api_call", "route")
 
         routeLabelValues shouldContain "/get/resource/{name}/with/id/{id}"
 
@@ -270,13 +271,18 @@ class ApiMetricsTest {
 }
 
 
-private fun CollectorRegistry.labelValues(metric: String, label: String) = metricFamilySamples().nextElement()
-    .samples.filter { it.name == metric }
-    .map { it.labelValues[it.labelNames.indexOf(label)] }
+private fun PrometheusRegistry.labelValues(metric: String, label: String) = scrape()
+    .first { it.metadata.name == metric }
+    .dataPoints
+    .map { it.labels.get(label) }
 
-private fun CollectorRegistry.assertCounterValue(counterValue: Int, clue: String = "", function: Sample.() -> Boolean) {
-    metricFamilySamples().asIterator().next().samples.find { it.function() }.apply {
-        withClue(clue) { (this?.value ?: 0) shouldBe counterValue }
+private fun PrometheusRegistry.assertCounterValue(counterValue: Int, clue: String = "", function: Labels.() -> Boolean) {
+    scrape().iterator().next()
+        .dataPoints.find { it.labels.function() }
+        ?.takeIf { it is CounterDataPointSnapshot }
+        ?.apply {
+            withClue(clue) { ((this as CounterDataPointSnapshot).value) shouldBe counterValue
+        }
     }
 }
 

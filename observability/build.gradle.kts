@@ -60,7 +60,8 @@ dependencies {
     implementation(Ktor.Server.coreJvm)
     implementation(Ktor.Server.metricsMicrometer)
     implementation(Ktor.Server.metricsMicrometerJvm)
-    implementation(Prometheus.simpleClient)
+    implementation(Prometheus.exporterCommon)
+    implementation(Prometheus.metricsCore)
     implementation(Micrometer.registryPrometheus)
 
     testImplementation(Junit.engine)

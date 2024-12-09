@@ -11,21 +11,22 @@ interface DependencyGroup {
 }
 
 object Prometheus: DependencyGroup {
-    override val version = "0.16.0"
-    override val groupId = "io.prometheus"
+    override val version get() = "1.3.4"
+    override val groupId get() = "io.prometheus"
 
-    val simpleClient = dependency("simpleclient_common")
+    val exporterCommon get() = dependency("prometheus-metrics-exporter-common")
+    val metricsCore get() = dependency("prometheus-metrics-core")
 }
 
 object Micrometer: DependencyGroup {
-    override val version = "1.13.3"
+    override val version = "1.14.1"
     override val groupId = "io.micrometer"
 
     val registryPrometheus = dependency("micrometer-registry-prometheus")
 }
 
 object Kotlin {
-    const val version = "1.9.23"
+    const val version = "2.0.21"
 }
 
 object Kotest: DependencyGroup {
@@ -94,14 +95,14 @@ object Mockk: DependencyGroup {
 }
 
 object Jackson: DependencyGroup {
-    override val version get() = "2.17.2"
+    override val version get() = "2.18.1"
 
     val datatypeJsr310 get() = dependency("jackson-datatype-jsr310", groupId = "com.fasterxml.jackson.datatype")
     val moduleKotlin get() = dependency("jackson-module-kotlin", groupId = "com.fasterxml.jackson.module")
 }
 
 object Junit: DependencyGroup {
-    override val version = "5.11.0"
+    override val version = "5.11.3"
     override val groupId = "org.junit.jupiter"
 
     val api = dependency("junit-jupiter-api")
