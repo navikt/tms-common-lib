@@ -42,7 +42,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.creating(Jar::class) {
+            val sourcesJar by tasks.registering(Jar::class) {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
@@ -64,8 +64,9 @@ dependencies {
     implementation(Prometheus.metricsCore)
     implementation(Micrometer.registryPrometheus)
 
-    testImplementation(Junit.engine)
-    testImplementation(Junit.params)
+    testImplementation(JunitPlatform.launcher)
+    testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.params)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Kotest.runnerJunit)
     testImplementation(Ktor.Server.testHost)
@@ -74,7 +75,7 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

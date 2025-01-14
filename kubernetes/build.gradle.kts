@@ -18,8 +18,8 @@ dependencies {
     implementation(Ktor.Client.apache)
     implementation(Ktor.Serialization.jackson)
     implementation(Logback.classic)
-    testImplementation(kotlin("test-junit5"))
-    testImplementation(Junit.engine)
+    testImplementation(JunitPlatform.launcher)
+    testImplementation(JunitJupiter.api)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Mockk.mockk)
     testImplementation(Ktor.Server.testHost)
@@ -47,7 +47,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.creating(Jar::class) {
+            val sourcesJar by tasks.registering(Jar::class) {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
@@ -59,7 +59,7 @@ publishing {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 

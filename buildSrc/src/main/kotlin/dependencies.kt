@@ -19,14 +19,14 @@ object Prometheus: DependencyGroup {
 }
 
 object Micrometer: DependencyGroup {
-    override val version = "1.14.1"
+    override val version = "1.14.2"
     override val groupId = "io.micrometer"
 
     val registryPrometheus = dependency("micrometer-registry-prometheus")
 }
 
 object Kotlin {
-    const val version = "2.0.21"
+    const val version = "2.1.0"
 }
 
 object Kotest: DependencyGroup {
@@ -39,7 +39,7 @@ object Kotest: DependencyGroup {
 }
 
 object Ktor {
-    val version get() = "3.0.1"
+    val version get() = "3.0.3"
     val groupId get() = "io.ktor"
 
     object Server: DependencyGroup {
@@ -78,7 +78,7 @@ object Ktor {
 
 object KotlinLogging: DependencyGroup {
     override val groupId = "io.github.oshai"
-    override val version = "7.0.0"
+    override val version = "7.0.3"
 
     val logging = dependency("kotlin-logging")
 }
@@ -101,17 +101,25 @@ object Jackson: DependencyGroup {
     val moduleKotlin get() = dependency("jackson-module-kotlin", groupId = "com.fasterxml.jackson.module")
 }
 
-object Junit: DependencyGroup {
-    override val version = "5.11.3"
-    override val groupId = "org.junit.jupiter"
+object JunitJupiter: DependencyGroup {
+    override val groupId get() = "org.junit.jupiter"
+    override val version get() = "5.11.4"
 
-    val api = dependency("junit-jupiter-api")
-    val engine = dependency("junit-jupiter-engine")
-    val params = dependency("junit-jupiter-params")
+    val api get() = dependency("junit-jupiter-api")
+    val engine get() = dependency("junit-jupiter-engine")
+    val params get() = dependency("junit-jupiter-params")
 }
+
+object JunitPlatform: DependencyGroup {
+    override val groupId get() = "org.junit.platform"
+    override val version get() = "1.11.4"
+
+    val launcher get() = dependency("junit-platform-launcher")
+}
+
 
 object Kotlinx: DependencyGroup {
     override val groupId = "org.jetbrains.kotlinx"
 
-    val coroutines = dependency("kotlinx-coroutines-core", version = "1.8.1")
+    val coroutines = dependency("kotlinx-coroutines-core", version = "1.10.1")
 }
