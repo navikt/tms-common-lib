@@ -60,7 +60,7 @@ object Kotlinx: DependencyGroup {
 }
 
 object Ktor {
-    val version get() = "3.1.2"
+    val version get() = "3.1.3"
     val groupId get() = "io.ktor"
 
     object Server: DependencyGroup {
