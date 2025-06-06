@@ -57,9 +57,7 @@ dependencies {
     implementation(Ktor.Server.auth)
     implementation(Ktor.Server.authJwt)
     implementation(Ktor.Server.core)
-    implementation(Ktor.Server.coreJvm)
     implementation(Ktor.Server.metricsMicrometer)
-    implementation(Ktor.Server.metricsMicrometerJvm)
     implementation(Prometheus.exporterCommon)
     implementation(Prometheus.metricsCore)
     implementation(Micrometer.registryPrometheus)
@@ -68,8 +66,7 @@ dependencies {
     testImplementation(JunitJupiter.api)
     testImplementation(JunitJupiter.params)
     testImplementation(Kotest.assertionsCore)
-    testImplementation(Kotest.runnerJunit)
-    testImplementation(Ktor.Server.testHost)
+    testImplementation(Ktor.Test.serverTestHost)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

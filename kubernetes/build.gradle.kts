@@ -11,18 +11,19 @@ repositories {
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
-    implementation(Jackson.datatypeJsr310)
-    implementation(Jackson.moduleKotlin)
+    implementation(JacksonDatatype.datatypeJsr310)
+    implementation(JacksonDatatype.moduleKotlin)
     implementation(Ktor.Client.core)
     implementation(Ktor.Client.contentNegotiation)
     implementation(Ktor.Client.apache)
     implementation(Ktor.Serialization.jackson)
-    implementation(Logback.classic)
+    implementation(Logstash.logbackEncoder)
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.params)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Mockk.mockk)
-    testImplementation(Ktor.Server.testHost)
+    testImplementation(Ktor.Test.serverTestHost)
 }
 
 val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"

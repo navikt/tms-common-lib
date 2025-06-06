@@ -11,7 +11,6 @@ repositories {
 
 dependencies {
     api(kotlin("stdlib-jdk8"))
-    implementation(Logback.classic)
     implementation(Kotlinx.coroutines)
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
