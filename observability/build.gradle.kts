@@ -61,6 +61,7 @@ dependencies {
     implementation(Prometheus.exporterCommon)
     implementation(Prometheus.metricsCore)
     implementation(Micrometer.registryPrometheus)
+    implementation(Logback.classic)
 
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)

@@ -49,6 +49,7 @@ dependencies {
     implementation(Ktor.Server.authJwt)
     implementation(Ktor.Server.core)
     implementation(Ktor.Server.metricsMicrometer)
+    implementation(Logback.classic)
     implementation(Prometheus.exporterCommon)
     implementation(Prometheus.metricsCore)
     implementation(Micrometer.registryPrometheus)

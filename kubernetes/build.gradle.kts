@@ -17,6 +17,7 @@ dependencies {
     implementation(Ktor.Client.contentNegotiation)
     implementation(Ktor.Client.apache)
     implementation(Ktor.Serialization.jackson)
+    implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
