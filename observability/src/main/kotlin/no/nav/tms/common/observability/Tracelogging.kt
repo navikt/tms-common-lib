@@ -37,7 +37,8 @@ fun withTraceLogging(
     function: () -> Unit
 ) {
     withLoggingContext(
-        mapOf(
+        restorePrevious = false,
+        map = mapOf(
             "minside_id" to id,
             "contenttype" to contenttype.name
         ) + extra
@@ -51,7 +52,8 @@ suspend fun withTraceLoggingAsync(
     function: suspend () -> Unit
 ) {
     withLoggingContext(
-        mapOf(
+        restorePrevious = false,
+        map = mapOf(
             "minside_id" to id,
             "contenttype" to contenttype.name
         ) + extra
@@ -66,7 +68,8 @@ suspend fun withApiTracing(
     function: suspend () -> Unit
 ) {
     withLoggingContext(
-        mapOf(
+        restorePrevious = false,
+        map= mapOf(
             "route" to "$method – $route",
             "contenttype" to contenttype.name
         ) + extra
