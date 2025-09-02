@@ -3,6 +3,7 @@ package no.nav.tms.common.observability
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.serialization.*
 import io.ktor.server.application.*
+import io.ktor.server.application.hooks.ResponseSent
 import io.ktor.server.request.*
 import io.ktor.util.*
 import org.slf4j.MDC
@@ -87,5 +88,14 @@ class ApiMdc{
             }
             return plugin
         }
+    }
+}
+
+val ApiMdc2 = createApplicationPlugin(name = "ApiMdc2") {
+    onCall { call ->
+        MDC.put("route", call.request.uri)
+    }
+    on(ResponseSent) {
+        MDC.remove("route")
     }
 }
