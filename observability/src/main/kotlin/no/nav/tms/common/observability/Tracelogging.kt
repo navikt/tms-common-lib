@@ -70,28 +70,15 @@ suspend fun withApiTracing(
 ) {
     withLoggingContext(
         restorePrevious = false,
-        map= mapOf(
+        map = mapOf(
             "route" to "$method – $route",
             "contenttype" to contenttype.name
         ) + extra
     ) { function() }
 }
 
-class ApiMdc{
-    companion object Plugin : BaseApplicationPlugin<ApplicationCallPipeline, Configuration, ApiMdc> {
 
-        override val key = AttributeKey<ApiMdc>("ApiMdc")
-        override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): ApiMdc {
-            val plugin = ApiMdc()
-            pipeline.intercept(ApplicationCallPipeline.Monitoring) {
-                MDC.put("route", call.request.uri)
-            }
-            return plugin
-        }
-    }
-}
-
-val ApiMdc2 = createApplicationPlugin(name = "ApiMdc2") {
+val ApiMdc = createApplicationPlugin(name = "ApiMdc2") {
     onCall { call ->
         MDC.put("route", call.request.uri)
     }
