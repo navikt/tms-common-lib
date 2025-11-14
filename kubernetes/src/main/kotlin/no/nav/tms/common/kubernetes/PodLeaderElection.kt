@@ -64,5 +64,5 @@ class PodLeaderElection(
 
 private data class ElectorResponse(
     val name: String,
-    @JsonProperty("last_update") val lastUpdate: ZonedDateTime
+    @param:JsonProperty("last_update") val lastUpdate: ZonedDateTime
 )
