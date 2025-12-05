@@ -33,6 +33,13 @@ object JunitPlatform: DependencyGroup {
     val launcher get() = dependency("junit-platform-launcher")
 }
 
+object JunitPioneer: DependencyGroup {
+    override val groupId get() = "org.junit-pioneer"
+    override val version get() = "2.3.0"
+
+    val pioneer get() = dependency("junit-pioneer")
+}
+
 object Kotest: DependencyGroup {
     override val groupId get() = "io.kotest"
     override val version get() = "6.0.4"
