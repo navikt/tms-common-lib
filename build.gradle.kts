@@ -39,6 +39,7 @@ fun isNonStable(version: String): Boolean {
     val isStable = stableKeyword || regex.matches(version)
     return isStable.not()
 }
+
 tasks.named<DependencyUpdatesTask>("dependencyUpdates").configure {
 
     // optional parameters

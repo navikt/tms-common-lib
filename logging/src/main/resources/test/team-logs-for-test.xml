@@ -1,0 +1,9 @@
+<included>
+    <appender name="__team_logs_appender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <logger name="__team_logs" additivity="false">
+        <appender-ref ref="__team_logs_appender"/>
+    </logger>
+</included>
