@@ -1,23 +1,32 @@
 package no.nav.tms.common.logging
 
 import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.joran.JoranConfigurator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.LoggerFactory
 
-
 object TeamLogs {
 
-    private const val LOGGER_NAME = "__team_logs"
-    private const val APPENDER_NAME = "__team_logs_appender"
+    internal const val LOGGER_NAME = "__team_logs"
+    internal const val NULL_LOGGER_NAME = "__noop_logs"
+    internal const val APPENDER_NAME = "__team_logs_appender"
 
-    fun logger(): KLogger {
-        validateContext()
+    private val log = KotlinLogging.logger {  }
 
-        return KotlinLogging.logger(LOGGER_NAME)
+    fun logger(failSilently: Boolean = false): KLogger {
+        if (contextConfigured()) {
+            return KotlinLogging.logger(LOGGER_NAME)
+        } else if (failSilently) {
+            log.warn { "Did not find a valid team logs configuration. Directing team logger to null" }
+
+            return createNullLogger()
+        } else {
+            throw TeamLogggerNotIncludedException()
+        }
     }
 
-    private fun validateContext() {
+    private fun contextConfigured(): Boolean {
         val context = LoggerFactory.getILoggerFactory() as LoggerContext
 
         val teamLogsAppender = context.loggerList
@@ -26,10 +35,30 @@ object TeamLogs {
             ?.asSequence()
             ?.find { it.name == APPENDER_NAME }
 
-        if (teamLogsAppender == null) {
-            throw TeamLogggerNotIncludedException()
-        }
+        return teamLogsAppender != null
     }
+
+    private fun createNullLogger(): KLogger {
+        val context = LoggerFactory.getILoggerFactory() as LoggerContext
+
+        val configurator = JoranConfigurator()
+
+        configurator.setContext(context)
+        configurator.doConfigure(NULL_LOGGER_CONFIG.byteInputStream())
+
+        return KotlinLogging.logger(NULL_LOGGER_NAME)
+    }
+
+    //language=xml
+    private const val NULL_LOGGER_CONFIG = """
+<configuration>
+    <appender name="__noop_appender" class="ch.qos.logback.core.helpers.NOPAppender"/>
+
+    <logger name="__noop_logs" additivity="false">
+        <appender-ref ref="__noop_appender"/>
+    </logger>
+</configuration>
+"""
 }
 
 class TeamLogggerNotIncludedException: IllegalStateException(

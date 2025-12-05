@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 
-object TeamLogsTest {
+object TeamLogsConfigTest {
 
     @Test
     fun `kaster ikke feil dersom logback-fil inkluderer team-logs-fil`() {
@@ -35,6 +35,15 @@ object TeamLogsTest {
 
         shouldNotThrow<TeamLogggerNotIncludedException> {
             TeamLogs.logger()
+        }
+    }
+
+    @Test
+    fun `logger advarser og returnerer null-logger hvis failSilently er satt og team-logs ikke er inkludert`() {
+        loadLogbackFile("uten-include.xml")
+
+        shouldNotThrow<TeamLogggerNotIncludedException> {
+            TeamLogs.logger(failSilently = true)
         }
     }
 
