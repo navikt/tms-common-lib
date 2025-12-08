@@ -1,8 +1,4 @@
-# Logging
-
-Lite bibliotek for å konfigurere logging for Team Min Sides tjenester
-
-## Team-logs
+# Team-logger
 
 Team logs tillater apper å logge sensitiv informasjon på en måte der kun team-medlemmer kan se loggmeldingene. Dette erstattet gammel secureLog-config i 2025.
 

@@ -38,7 +38,7 @@ publishing {
     publications {
         create<MavenPublication>("gpr") {
             groupId = "no.nav.tms.common"
-            artifactId = "logging"
+            artifactId = "team-logger"
             version = libraryVersion
             from(components["java"])
 
