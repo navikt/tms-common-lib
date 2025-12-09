@@ -5,7 +5,7 @@ import ch.qos.logback.classic.joran.JoranConfigurator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.LoggerFactory
-import kotlin.reflect.KClass
+import kotlin.text.indexOf
 
 object TeamLogs {
 
@@ -16,7 +16,7 @@ object TeamLogs {
     private val log = KotlinLogging.logger {  }
 
     fun logger(failSilently: Boolean = false, caller: () -> Unit): KLogger {
-        log.info { "Setter opp team-logger for klasse '${caller::class.simpleName}'" }
+        log.info { "Setter opp team-logger for ${cleanClassName(caller)}" }
 
         if (contextConfigured()) {
             return KotlinLogging.logger(LOGGER_NAME)
@@ -50,6 +50,19 @@ object TeamLogs {
         configurator.doConfigure(NULL_LOGGER_CONFIG.byteInputStream())
 
         return KotlinLogging.logger(NULL_LOGGER_NAME)
+    }
+
+    // Extracted from internal class KLoggerNameResolver (io.github.oshai:kotlin-logging-jvm)
+    private fun cleanClassName(caller: () -> Unit): String {
+        val className = caller::class.java.name
+
+        listOf("Kt$", "$").forEach { classNameEnding ->
+            val indexOfEnding = className.indexOf(classNameEnding)
+            if (indexOfEnding != -1) {
+                return className.take(indexOfEnding)
+            }
+        }
+        return className
     }
 
     //language=xml
