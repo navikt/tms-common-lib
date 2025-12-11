@@ -5,6 +5,7 @@ import ch.qos.logback.classic.joran.JoranConfigurator
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.text.indexOf
 
 object TeamLogs {
@@ -18,12 +19,14 @@ object TeamLogs {
     fun logger(failSilently: Boolean = false, caller: () -> Unit): KLogger {
         log.info { "Setter opp team-logger for ${cleanClassName(caller)}" }
 
-        if (contextConfigured()) {
-            return KotlinLogging.logger(LOGGER_NAME)
+        return if (contextConfigured()) {
+            KotlinLogging.logger(LOGGER_NAME).also { teamLog ->
+                checkIn(teamLog)
+            }
         } else if (failSilently) {
             log.warn { "Fant ikke konfigurasjon for team-logger. Ignorerer meldinger ment for team-logs." }
 
-            return createNullLogger()
+            createNullLogger()
         } else {
             throw TeamLogggerNotIncludedException()
         }
@@ -39,6 +42,16 @@ object TeamLogs {
             ?.find { it.name == APPENDER_NAME }
 
         return teamLogsAppender != null
+    }
+
+    private val hasCheckedIn = AtomicBoolean(false)
+    private fun checkIn(teamLog: KLogger) {
+
+        if (!hasCheckedIn.getAndSet(true)) {
+            val podName = System.getenv("NAIS_POD_NAME") ?: "local"
+
+            teamLog.info { "Pod [$podName] har koblet seg mot team logs." }
+        }
     }
 
     private fun createNullLogger(): KLogger {
