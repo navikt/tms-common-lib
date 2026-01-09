@@ -10,7 +10,7 @@ import kotliquery.using
 import org.postgresql.util.PSQLState
 import java.sql.SQLException
 
-class DatabaseConnection internal constructor(
+class PostgresDatabase internal constructor(
     val dataSource: HikariDataSource
 ) {
     fun update(queryBuilder: () -> Query): Int {

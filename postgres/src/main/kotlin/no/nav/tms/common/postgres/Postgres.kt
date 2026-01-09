@@ -4,17 +4,15 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.testcontainers.postgresql.PostgreSQLContainer
 
-object Database {
-    fun connectToNaisEnv(
+object Postgres {
+    fun connectWithEnv(
+        jdbcUrl: String,
         hikariConfig: HikariConfig.() -> Unit = {}
-    ): DatabaseConnection {
-
-        val dbUrl: String = System.getenv("DB_JDBC_URL")
-            ?: throw IllegalStateException("Kan ikke opprette forbindelse mot database - mangler miljøvariabel 'DB_JDBC_URL'")
+    ): PostgresDatabase {
 
         val config = HikariConfig().apply {
+            this.jdbcUrl = jdbcUrl
             driverClassName = "org.postgresql.Driver"
-            jdbcUrl = dbUrl
             minimumIdle = 1
             maxLifetime = 1800000
             maximumPoolSize = 5
@@ -25,13 +23,13 @@ object Database {
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         }.apply(hikariConfig)
 
-        return DatabaseConnection(HikariDataSource(config))
+        return PostgresDatabase(HikariDataSource(config))
     }
 
-    fun connectToDocker(
+    fun connectWithContainer(
         container: PostgreSQLContainer,
         hikariConfig: HikariConfig.() -> Unit = {}
-    ): DatabaseConnection {
+    ): PostgresDatabase {
 
         val config = HikariConfig().apply {
             jdbcUrl = container.jdbcUrl
@@ -42,6 +40,6 @@ object Database {
 
         return HikariDataSource(config)
             .apply { validate() }
-            .let { DatabaseConnection(it) }
+            .let { PostgresDatabase(it) }
     }
 }
