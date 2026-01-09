@@ -10,6 +10,21 @@ interface DependencyGroup {
     }
 }
 
+object Flyway: DependencyGroup {
+    override val groupId get() = "org.flywaydb"
+    override val version get() = "11.16.0"
+
+    val core get() = dependency("flyway-core")
+    val postgres get() = dependency("flyway-database-postgresql")
+}
+
+object Hikari: DependencyGroup {
+    override val groupId get() = "com.zaxxer"
+    override val version get() = "7.0.2"
+
+    val cp get() = dependency("HikariCP")
+}
+
 object JacksonDatatype: DependencyGroup {
     override val version get() = "2.20.1"
 
@@ -57,6 +72,13 @@ object Kotlinx: DependencyGroup {
     override val groupId get() = "org.jetbrains.kotlinx"
 
     val coroutines get() = dependency("kotlinx-coroutines-core", version = "1.10.2")
+}
+
+object KotliQuery: DependencyGroup {
+    override val groupId get() = "com.github.seratch"
+    override val version get() = "1.9.1"
+
+    val kotliquery get() = dependency("kotliquery")
 }
 
 object Ktor {
@@ -131,10 +153,25 @@ object Mockk: DependencyGroup {
     val mockk get() = dependency("mockk")
 }
 
+object Postgresql: DependencyGroup {
+    override val groupId get() = "org.postgresql"
+    override val version get() = "42.7.8"
+
+    val postgresql get() = dependency("postgresql")
+}
+
+
 object Prometheus: DependencyGroup {
     override val version get() = "1.3.4"
     override val groupId get() = "io.prometheus"
 
     val metricsCore get() = dependency("prometheus-metrics-core")
     val exporterCommon get() = dependency("prometheus-metrics-exporter-common")
+}
+
+object TestContainers: DependencyGroup {
+    override val version get() = "2.0.1"
+    override val groupId get() = "org.testcontainers"
+
+    val postgresql get() = dependency("testcontainers-postgresql")
 }
