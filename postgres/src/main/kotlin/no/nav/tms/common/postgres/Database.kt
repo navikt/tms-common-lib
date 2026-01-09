@@ -6,7 +6,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 
 object Database {
     fun connectToNaisEnv(
-        hikariConfig: HikariConfig.() -> Unit
+        hikariConfig: HikariConfig.() -> Unit = {}
     ): DatabaseConnection {
 
         val dbUrl: String = System.getenv("DB_JDBC_URL")
