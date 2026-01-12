@@ -31,14 +31,13 @@ object Postgres {
         hikariConfig: HikariConfig.() -> Unit = {}
     ): PostgresDatabase {
 
-        val config = HikariConfig().apply {
+        return HikariDataSource().apply {
             jdbcUrl = container.jdbcUrl
             username = container.username
             password = container.password
             isAutoCommit = true
-        }.apply(hikariConfig)
-
-        return HikariDataSource(config)
+        }
+            .apply(hikariConfig)
             .apply { validate() }
             .let { PostgresDatabase(it) }
     }
