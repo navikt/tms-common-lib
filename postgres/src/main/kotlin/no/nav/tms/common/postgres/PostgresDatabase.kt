@@ -21,43 +21,62 @@ class PostgresDatabase internal constructor(
                     .asUpdate
                     .let(session::run)
             }
-        } catch (e: SQLException) {
-            if (e.sqlState == PSQLState.UNIQUE_VIOLATION.state) {
-                throw UniqueConstraintException()
+        } catch (e: Exception) {
+            if (e is SQLException && e.sqlState == PSQLState.UNIQUE_VIOLATION.state) {
+                throw UniqueConstraintException(e)
             } else {
-                throw e
+                throw QueryException("Error during 'update' query action", e)
             }
         }
     }
 
     fun <T> single(queryBuilder: (Session) -> NullableResultQueryAction<T>): T {
-        return using(sessionOf(dataSource)) { session ->
-            queryBuilder(session)
-                .let(session::run)
-        } ?: throw EmptyResultException()
+        return try {
+            using(sessionOf(dataSource)) { session ->
+                queryBuilder(session)
+                    .let(session::run)
+            } ?: throw EmptyResultException()
+        } catch (e: Exception) {
+            throw QueryException("Error during 'select single' query action", e)
+        }
     }
 
     fun <T> singleOrNull(queryBuilder: (Session) -> NullableResultQueryAction<T>): T? {
-        return using(sessionOf(dataSource)) { session ->
-            queryBuilder(session)
-                .let(session::run)
+        return try {
+            using(sessionOf(dataSource)) { session ->
+                queryBuilder(session)
+                    .let(session::run)
+            }
+        } catch (e: Exception) {
+            throw QueryException("Error during 'select single or null' query action", e)
         }
     }
 
     fun <T> list(queryBuilder: (Session) -> ListResultQueryAction<T>): List<T> {
-        return using(sessionOf(dataSource)) { session ->
-            queryBuilder(session)
-                .let(session::run)
+        return try {
+            using(sessionOf(dataSource)) { session ->
+                queryBuilder(session)
+                    .let(session::run)
+            }
+        } catch (e: Exception) {
+            throw QueryException("Error during 'select list' query action", e)
         }
     }
 
-    fun batch(statement: String, params: List<Map<String, Any?>>) {
-        using(sessionOf(dataSource)) {
-            it.batchPreparedNamedStatement(statement, params)
+    fun batchUpdate(statement: String, params: List<Map<String, Any?>>) {
+        try {
+            using(sessionOf(dataSource)) {
+                it.batchPreparedNamedStatement(statement, params)
+            }
+        } catch (e: Exception) {
+            throw BatchQueryException(e)
         }
     }
 }
 
-class EmptyResultException(): RuntimeException()
-class UniqueConstraintException(): RuntimeException()
+open class QueryException(message: String, cause: Exception?): RuntimeException(message, cause)
+
+class EmptyResultException(): QueryException("Could not return single row because query yielded empty result.", null)
+class UniqueConstraintException(cause: Exception): QueryException("Update or insert violates unique constraint", cause)
+class BatchQueryException(cause: Exception): QueryException("Exception raised during batched update or insert query", cause)
 
