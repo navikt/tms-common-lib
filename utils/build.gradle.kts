@@ -14,6 +14,7 @@ dependencies {
     implementation(Kotlinx.coroutines)
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.engine)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Mockk.mockk)
 }

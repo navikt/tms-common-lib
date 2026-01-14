@@ -44,8 +44,6 @@ publishing {
 }
 
 dependencies {
-    implementation(Flyway.core)
-    implementation(Flyway.postgres)
     implementation(Hikari.cp)
     implementation(JacksonDatatype.datatypeJsr310)
     implementation(JacksonDatatype.moduleKotlin)
