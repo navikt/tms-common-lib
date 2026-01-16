@@ -1,61 +1,67 @@
+# Postgres convenience-library
 
-# Metrics library
- https://jitpack.io/#navikt/tms-common-lib
+Small convenience library for connecting to- and querying a postgres database
 
-## Ktor Application Installers
+## Connecting to database
 
-### Using default collector registry
+This library uses Hikari Connection Pool to connect to postgres. The API enables connecting to a JDBC-URL or directly 
+to a Docker-instance. 
+
+Example using jdbc:
+
 ```kotlin
-installTmsApiMetrics {
-    //setup route for scraping, should only be used if the route is not already present. Default: false
-    setupMetricsRoute = true
-    //Exclude routes from metrics, default: liveness and readiness routes
-    ignoreRoutes { route, status ->
-        (route == "/ignore" && status == 201) || (route == "/knowndefect" && status == 500)
-    }
-    //Add custom statusgroup mappings, default: none
-    statusGroups {
-        "map" belongsTo StatusGroup.IGNORED whenStatusIs HttpStatusCode.BadRequest
-    }
+main() {
+    val jdbcUrl = System.getEnv("DB_JDBC_URL")
+    
+    val database = Postgres.connectWithJdbcUrl(jdbcUrl)
 }
 ```
 
-### Using micrometer library
-Installation with micrometer has two extra config-options: 
-
-`installMicrometricsPlugin`
-Perform installation of the Micrometer plugin, defaults to false.
-should be true ONLY IF Micrometer is not already installed
-
-`registry`
-Supply a Prometehusregistry to be used as collector, defaults to new instance.
-If the default is used, setupMetricsRoute must be set to true
-It is nessecary to supply a predefined registry if
-1. the application uses R&R(which already has micrometer installed),
-2. if micrometrics is used in any other part of the application
-3. if the installation of micrometrics is performed by `installTmsMicrometerMetrics`
-
+Example using docker container: 
 
 ```kotlin
-installTmsMicrometerMetrics {
-
-    registry = registryUsedInApplication
-    installMicrometerPlugin = true
-    setupMetricsRoute = true
-    ignoreRoutes { route, status ->
-        (route == "/ignore" && status == 201) || (route == "/knowndefect" && status == 500)
+object TestDB {
+    private val container = PostgreSQLContainer("postgres:17.7").also {
+        it.start()
     }
-    statusGroups {
-        "map" belongsTo StatusGroup.IGNORED whenStatusIs HttpStatusCode.BadRequest
-    }
+    val database = Postgres.connectWithContainer(container)
 }
 
 ```
 
-### Metric content
+## Hikari Connection Pool config
 
-#### tms_api_call
-* `route`: route the call was made to
-* `status`: status of response
-* `statusgroup`: classification of status based on neccescary actions, see StausGroup in [MetricHelpers](src/main/kotlin/nav/no/tms/common/metrics/MetricHelpers.kt)
-* `acr`: authorized sensitivitylevel on request, see Sensitivity in [MetricHelpers](src/main/kotlin/nav/no/tms/common/metrics/MetricHelpers.kt)
+The default config for HikariCP when connecting using jdbc is:
+
+```kotlin
+HikariConfig().apply {
+    driverClassName = "org.postgresql.Driver"
+    minimumIdle = 1
+    maxLifetime = 1800000
+    maximumPoolSize = 5
+    connectionTimeout = 4000
+    validationTimeout = 1000
+    idleTimeout = 30000
+    isAutoCommit = true
+    transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+}
+```
+
+This can be further changed when connecting to the database. For example:
+
+```kotlin
+    val jdbcUrl = System.getEnv("DB_JDBC_URL")
+    
+    val database = Postgres.connectWithJdbcUrl(jdbcUrl) {
+        isAutoCommit = false
+        maximumPoolSize = 10
+    }
+```
+
+The default config when connecting to docker container is:
+
+```kotlin
+HikariConfig().apply {
+    isAutoCommit = true
+}
+```
