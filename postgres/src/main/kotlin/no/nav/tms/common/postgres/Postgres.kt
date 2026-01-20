@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.testcontainers.postgresql.PostgreSQLContainer
 
 object Postgres {
-    fun connectWithJdbcUrl(
+    fun connectToJdbcUrl(
         jdbcUrl: String,
         hikariConfig: HikariConfig.() -> Unit = {}
     ): PostgresDatabase {
@@ -26,7 +26,7 @@ object Postgres {
         return PostgresDatabase(HikariDataSource(config))
     }
 
-    fun connectWithContainer(
+    fun connectToContainer(
         container: PostgreSQLContainer,
         hikariConfig: HikariConfig.() -> Unit = {}
     ): PostgresDatabase {

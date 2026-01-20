@@ -13,7 +13,7 @@ Example using jdbc:
 main() {
     val jdbcUrl = System.getEnv("DB_JDBC_URL")
     
-    val database = Postgres.connectWithJdbcUrl(jdbcUrl)
+    val database = Postgres.connectToJdbcUrl(jdbcUrl)
 }
 ```
 
@@ -24,7 +24,7 @@ object TestDB {
     private val container = PostgreSQLContainer("postgres:17.7").also {
         it.start()
     }
-    val database = Postgres.connectWithContainer(container)
+    val database = Postgres.connectToContainer(container)
 }
 
 ```
@@ -52,7 +52,7 @@ This can be further changed when connecting to the database. For example:
 ```kotlin
     val jdbcUrl = System.getEnv("DB_JDBC_URL")
     
-    val database = Postgres.connectWithJdbcUrl(jdbcUrl) {
+    val database = Postgres.connectToJdbcUrl(jdbcUrl) {
         isAutoCommit = false
         maximumPoolSize = 10
     }
