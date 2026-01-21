@@ -1,13 +1,15 @@
-# Postgres convenience-library
+# Postgres util-bibliotek
 
-Small convenience library for connecting to- and querying a postgres database
+Lite hjelpebibliotek for å koble til- og kjøre spørringer mot postgres-databaser. 
 
-## Connecting to database
+Dette biblioteket forutsetter bruk av Kotliquery og HikariCP
 
-This library uses Hikari Connection Pool to connect to postgres. The API enables connecting to a JDBC-URL or directly 
-to a Docker-instance. 
+## Koble til database
 
-Example using jdbc:
+Dette bibliteket bruker Hikari Connection Pool for å koble mot postgres. Enten via en jdbc-url, eller direkte mot en
+testcontainer-instans.
+
+Eksempel med jdbc:
 
 ```kotlin
 main() {
@@ -17,7 +19,7 @@ main() {
 }
 ```
 
-Example using docker container: 
+Eksempel med docker container: 
 
 ```kotlin
 object TestDB {
@@ -31,7 +33,7 @@ object TestDB {
 
 ## Hikari Connection Pool config
 
-The default config for HikariCP when connecting using jdbc is:
+Default oppsett av HikariCP er som følger:
 
 ```kotlin
 HikariConfig().apply {
@@ -47,7 +49,7 @@ HikariConfig().apply {
 }
 ```
 
-This can be further changed when connecting to the database. For example:
+Dette kan videre konfigureres når en kobler til databasen. For eksempel:
 
 ```kotlin
     val jdbcUrl = System.getEnv("DB_JDBC_URL")
@@ -58,7 +60,7 @@ This can be further changed when connecting to the database. For example:
     }
 ```
 
-The default config when connecting to docker container is:
+Standard oppsett for tilkobling til TestContainer er:
 
 ```kotlin
 HikariConfig().apply {
