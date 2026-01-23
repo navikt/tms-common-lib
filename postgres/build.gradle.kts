@@ -1,22 +1,15 @@
 plugins {
-    `maven-publish`
-    `java-library`
+    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm")
+
+    // Apply the java-library plugin for API and implementation separation.
+    `java-library`
+    `maven-publish`
 }
 
 repositories {
     mavenCentral()
     mavenLocal()
-}
-
-dependencies {
-    api(kotlin("stdlib-jdk8"))
-    implementation(Kotlinx.coroutines)
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Mockk.mockk)
 }
 
 val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
@@ -33,11 +26,10 @@ publishing {
         }
     }
 
-
     publications {
         create<MavenPublication>("gpr") {
             groupId = "no.nav.tms.common"
-            artifactId = "utils"
+            artifactId = "postgres"
             version = libraryVersion
             from(components["java"])
 
@@ -51,6 +43,24 @@ publishing {
     }
 }
 
+dependencies {
+    implementation(Hikari.cp)
+    implementation(JacksonDatatype.datatypeJsr310)
+    implementation(JacksonDatatype.moduleKotlin)
+    implementation(KotlinLogging.logging)
+    implementation(KotliQuery.kotliquery)
+    implementation(Logback.classic)
+    implementation(Postgresql.postgresql)
+    implementation(TestContainers.postgresql)
+
+    testImplementation(JunitPlatform.launcher)
+    testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.params)
+    testImplementation(JunitJupiter.engine)
+    testImplementation(Kotest.assertionsCore)
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
 kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
