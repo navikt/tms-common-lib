@@ -49,3 +49,8 @@ x_minside_id :"<varselid>"  and cluster:"prod-gcp"
 x_contenttype :"microfrontend" and cluster:"dev-gcp"
 ```
 
+## Oppdateringer v2:
+- Mer rigid struktur på feltene i MDC for å tvinge konformitet på tvers av applikasjoner
+- Mer bruk av compileOnly avhengigheter for å slanke ned pakkestørrelse
+- Bedre dokumentasjon av bruk i logger
+
