@@ -38,12 +38,39 @@ class Contenttype private constructor(val name: String) {
 }
 
 /**
- * Legg til kontekst for på loki-logger
- * @param[minSideId] unik id for innholdet
- * @param[producedBy] team som produserte innholdet
+ * Interface for å definere kontekst for MinSide-logger. Kan implementeres av objekter som skal logges for å enkelt kunne legge til relevant kontekst i loggene.
+ * Inneholder predefinerte felter minside_id, contenttype og produced_by, samt mulighet for ekstra felter ved behov.
  */
 
-fun withMDC(
+interface MinSideContext {
+    val contenttype: Contenttype
+    val producedBy: String
+    val extraFields: Map<String, String>?
+    val minSideId: String
+
+    fun toMap(): Map<String, String> {
+        val basemap = mapOf(
+            "minside_id" to minSideId,
+            "contenttype" to contenttype.name,
+            "produced_by" to producedBy
+        )
+
+        return extraFields?.let {
+            return basemap + it
+        } ?: basemap
+    }
+
+}
+
+
+/**
+ * Legg til kontekst på loki-logger
+ * @param [minSideId] id for sporing gjennom loggene fra alle tjenester
+ * @param[producedBy] team som produserte innholdet
+ * @param[contenttype] type innhold som logges, f.eks varsel, utkast eller microfrontend. Kan også opprettes custom ved behov
+ *@param[function] kodeblokk som skal kjøres med denne konteksten
+ */
+fun withMinSideLoggContext(
     minSideId: String,
     contenttype: Contenttype,
     producedBy: String,
@@ -60,13 +87,27 @@ fun withMDC(
 }
 
 /**
+ * Legg til kontekst for loki-logger fra et MinSideContext objekt
+ * @param[minSideContext] objekt som implementerer MinSideContext
+ */
+
+fun <T : MinSideContext> withMinSideLoggContext(
+    minSideContext: T, function: () -> Unit
+) {
+    withLoggingContext(
+        restorePrevious = false,
+        map = minSideContext.toMap()
+    ) { function() }
+}
+
+
+/**
  * MDC context for API kall med predefinerte felter.
  * @param[route] kallens route
  * @param[contenttype] type innhold som håndteres i kallet
  * @param[method] HTTP metode (GET, POST, etc)
  */
-
-suspend fun withApiTracing(
+suspend fun withMinSideApiContex(
     route: String,
     contenttype: Contenttype,
     method: String = "GET",

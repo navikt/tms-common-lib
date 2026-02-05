@@ -2,35 +2,35 @@
 
 Hensikt: sørge for en helhetlig og sporbar logging fra team min side sine tjenester
 
-Legger by default på feltene `minside_id` og `contenttype` i MDC
+| funksjon              | felter                                     |
+|-----------------------|--------------------------------------------|
+| witMinSideLoggContext | `minside_id`, `contenttype`, `produced_by` |
+| withMinSideApiContex  | `route`, `contentype`                      |
 
 ## Bruke bilioteket
 
-### Legge på feltene i MVC
+### Legge på feltene i MDC
 
 ```
-// Standard
-withTraceLogging(id, Contenttype.varsel) { doStuff() }
-// Med ekstra felter
-withTraceLogging(id, Contenttype.varsel, extra, mapOf("custom_field" to "some custom value")) { function() }
+// Med primitive verdier
+withMinSideLoggContext(id, Contenttype.varsel, someteam) { function() }
 
-```
+// Objekt (for mer lesbar kode, eksempel for varsler)
 
-#### Convenience funksjoner
+val JsonMessage.context: MinSideLoggContext
+    get() = object : MinSideLoggContext {
+        override val minsideId: String get() = this["varselId"].asText()
+        override val contentType: Contenttype get() = Contenttype.varsel
+        override val producedBy: String get() = "team"
+        ovverride val extraFields: Map<String, String> get() = mapOf(
+            "some_field" to this["some_field"].asText(),
+            "action" to this["action"].asText()
+        )
+    }
+withMinSideLoggContext(JsonMessage.cotext) { doTheThings() }
+  
 
-Det er lagt til convenience funksjoner med noen preutfylte verdier for 3 av contentypene; varsel, microfrontends og
-utkast.
-
-```
-// Varsler
-traceVarsel(id){ doStuffVarselStuff() }
-//Utkast
-traceUtkast(id){ doUtkastStuff() }
-// Microfrontends
-fun traceMicrofrontend(id){ doStuff() }
-
-```
-
+ ``` 
 
 #### Hva skal jeg bruke som id?
 
@@ -40,17 +40,27 @@ bruker, da gir det mer
 mening å bruke id-en til microfrontenen <br/>
 NB! Ikke sensitive verdier som f.eks fødselsnummer.
 
-## Eksempler loggsøk:
+## Søke og filtrere logger for team min side sine tjenester
 
-```
-#Ett spesifikt varsel i prod
-x_minside_id :"<varselid>"  and cluster:"prod-gcp"
-#Alle mikrofrontender i dev
-x_contenttype :"microfrontend" and cluster:"dev-gcp"
-```
+### custom felter
+
+- `minside_id`: unik id for innholdet (f.eks varselId for varsler, utkastId for utkast)
+- `contenttype`: type innhold (f.eks varsel, utkast, microfrontend, api kall)
+- `produced_by`: produsent av innholdet
+
+### Eksempler loggsøk
+
+1. Gå til https://grafana.nav.cloud.nais.io/a/grafana-lokiexplore-app/explore
+2. Velg riktig datasource og filtrer på label `service_namespace="min-side"`
+   !["Grafana datasource og label filter"](./img/loggstart.png)
+
+3. Filtrer på custom felter i "Fields" seksjonen under labels
+   !["Grafana fields filter"](./img/filtreringfields.png)
 
 ## Oppdateringer v2:
+
 - Mer rigid struktur på feltene i MDC for å tvinge konformitet på tvers av applikasjoner
 - Mer bruk av compileOnly avhengigheter for å slanke ned pakkestørrelse
 - Bedre dokumentasjon av bruk i logger
+
 
