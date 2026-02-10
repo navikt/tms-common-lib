@@ -52,7 +52,8 @@ suspend fun withMinSideApiContex(
     withLoggingContext(
         restorePrevious = false,
         map = mapOf(
-            "route" to "$method – $route",
+            "route" to "route",
+            "method" to method,
             "domain" to domain.name
         )
     ) { function() }
@@ -62,8 +63,10 @@ suspend fun withMinSideApiContex(
 val ApiMdc = createApplicationPlugin(name = "ApiMdc2") {
     onCall { call ->
         MDC.put("route", call.request.uri)
+        MDC.put("method", call.request.httpMethod.value)
     }
     on(ResponseSent) {
         MDC.remove("route")
+        MDC.remove("method")
     }
 }
