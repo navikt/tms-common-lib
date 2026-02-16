@@ -56,9 +56,12 @@ dependencies {
     implementation(Logback.classic)
 
     testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.params)
     testImplementation(JunitJupiter.api)
     testImplementation(Kotest.assertionsCore)
+    testImplementation(Ktor.Test.serverTestHost)
+    testImplementation(Ktor.Server.contentNegotiation)
+    testImplementation(Ktor.Serialization.jackson)
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
