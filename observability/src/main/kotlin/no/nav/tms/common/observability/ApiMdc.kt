@@ -10,11 +10,10 @@ import io.ktor.server.routing.RoutingRoot
 import org.slf4j.MDC
 
 
-
 private val MDC_DOMAIN_KEY = AttributeKey<Domain>("mdcDomain")
 private val ROUTE_MDC_DOMAIN_KEY = AttributeKey<Domain>("routeMdcDomain")
 
-class Domain private constructor(val name: String) {
+class Domain private constructor(val name: String, val addToMdc: () -> Unit = { MDC.put("domain", name) }) {
     init {
         require(name.matches(Regex("^[a-z\\-]{4,15}\$"))) {
             "name må være 4-15 tegn og kan kun inneholde småbokstaver og -"
@@ -25,7 +24,7 @@ class Domain private constructor(val name: String) {
         val utkast = Domain("utkast")
         val varsel = Domain("varsel")
         val microfrontend = Domain("microfrontend")
-        val mixed: Domain? = null
+        val none: Domain = Domain("none", { MDC.remove("domain") })
 
         /**
          * Oppretter en custom Contenttype.NB! Kun for innhold som ikke er utkast, varsel eller microfrontend.
@@ -46,13 +45,12 @@ class Domain private constructor(val name: String) {
 }
 
 
-
 var ApplicationCall.mdcDomain: Domain?
     get() = attributes.getOrNull(MDC_DOMAIN_KEY)
     set(value) {
         if (value != null) {
             attributes.put(MDC_DOMAIN_KEY, value)
-            MDC.put("domain", value.name)
+            value.addToMdc.invoke()
         }
     }
 
@@ -76,8 +74,6 @@ var Route.mdcDomain: Domain?
  *
  * Konfigurasjon via [MdcDomainConfig]:
  *  - [applicationDomain]: Standard domene for hele applikasjonen
- *  - [routeScopedDomains]: Aktiver domene per route med [mdcDomain] på [Route]
- *  - [methodScopedDomains]: Aktiver domene per request med [mdcDomain] på [ApplicationCall]
  *
  * Eksempel på bruk:
  *
@@ -94,19 +90,16 @@ val ApiMdc = createApplicationPlugin(name = "ApiMdc", createConfiguration = ::Md
     onCall { call ->
         MDC.put("route", call.request.uri)
         MDC.put("method", call.request.httpMethod.value)
-        // Set application-level domain if no scoped domains are enabled
-        if (!pluginConfig.routeScopedDomains && !pluginConfig.methodScopedDomains) {
-            pluginConfig.applicationDomain?.let { MDC.put("domain", it.name) }
-        }
+        pluginConfig.applicationDomain?.addToMdc()
     }
     on(MonitoringEvent(RoutingRoot.RoutingCallStarted)) { call ->
-        if (pluginConfig.routeScopedDomains || pluginConfig.methodScopedDomains) {
-            val routeDomain = call.route.findMdcDomain()
-            if (routeDomain != null) {
-                call.attributes.put(ROUTE_MDC_DOMAIN_KEY, routeDomain)
-                MDC.put("domain", routeDomain.name)
-            }
+
+        val routeDomain = call.route.findMdcDomain()
+        if (routeDomain != null) {
+            call.attributes.put(ROUTE_MDC_DOMAIN_KEY, routeDomain)
+            routeDomain.addToMdc()
         }
+
     }
     on(ResponseSent) {
         MDC.remove("route")
@@ -126,6 +119,4 @@ private fun Route.findMdcDomain(): Domain? {
 
 class MdcDomainConfig {
     var applicationDomain: Domain? = null
-    var routeScopedDomains: Boolean = false
-    var methodScopedDomains: Boolean = false
 }

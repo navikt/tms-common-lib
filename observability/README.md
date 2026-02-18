@@ -1,4 +1,3 @@
-
 # Observability
 
 Observability-pakken inneholder verktøy for å legge til MDC (Mapped Diagnostic Context) felt i logger for Ktor-applikasjoner. Dette gjør det enklere å filtrere og søke i logger i Grafana.
@@ -15,7 +14,7 @@ En klasse som representerer et domene for logging. Inneholder predefinerte domen
 - `Domain.utkast` - for utkast-relatert innhold
 - `Domain.varsel` - for varsel-relatert innhold
 - `Domain.microfrontend` - for microfrontend-relatert innhold
-- `Domain.mixed` - for applikasjoner som håndterer flere domener (null-verdi)
+- `Domain.none` - for routes/metoder som ikke har noe spesifikt domene (null-verdi). **Dersom du setter `call.mdcDomain = Domain.none` for en request, vil ikke `domain`-feltet legges til i MDC for denne requesten.**
 
 Du kan også opprette egendefinerte domener med `Domain.custom("ditt-domene")`.
 
@@ -50,16 +49,13 @@ fun Application.module() {
 }
 ```
 
-### Route-scoped domener
+### Flere domener (uten felles domene)
 
-For applikasjoner som håndterer flere domener på forskjellige routes:
+Hvis applikasjonen din håndterer flere domener og ikke har ett felles domene, lar du config-blokken være tom:
 
 ```kotlin
 fun Application.module() {
-    install(ApiMdc) {
-        applicationDomain = Domain.mixed
-        routeScopedDomains = true
-    }
+    install(ApiMdc) { }
     
     routing {
         route("varsel") {
@@ -81,17 +77,13 @@ fun Application.module() {
 }
 ```
 
-### Method-scoped domener
+### Domene per request (overstyring)
 
 For finere kontroll kan du sette domene per request i selve metoden:
 
 ```kotlin
 fun Application.module() {
-    install(ApiMdc) {
-        applicationDomain = Domain.mixed
-        routeScopedDomains = true
-        methodScopedDomains = true
-    }
+    install(ApiMdc) { }
     
     routing {
         route("varsel") {
@@ -107,6 +99,20 @@ fun Application.module() {
                 call.respond(HttpStatusCode.OK)
             }
         }
+    }
+}
+```
+
+### Deaktivere domain-feltet for spesifikke requests
+
+Hvis du ønsker å fjerne `domain`-feltet fra MDC for en spesifikk request (for eksempel på en bestemt route), kan du sette `call.mdcDomain = Domain.none`:
+
+```kotlin
+routing {
+    get("/uten-domain") {
+        call.mdcDomain = Domain.none
+        // MDC inneholder: route, method (men ikke domain)
+        call.respond(HttpStatusCode.OK)
     }
 }
 ```
@@ -127,13 +133,13 @@ fun Application.module() {
 
 ## Konfigurasjon
 
-`MdcDomainConfig` har følgende innstillinger:
+`ApiMdc` kan konfigureres med følgende:
 
 | Egenskap | Type | Beskrivelse |
 |----------|------|-------------|
 | `applicationDomain` | `Domain?` | Standard domene for hele applikasjonen |
-| `routeScopedDomains` | `Boolean` | Aktiver domene per route med `mdcDomain` på `Route` |
-| `methodScopedDomains` | `Boolean` | Aktiver domene per request med `call.mdcDomain` |
+
+Du kan overstyre domenet for en route med `mdcDomain` på `Route`, og for en spesifikk request med `call.mdcDomain` – uten ekstra konfigurasjon.
 
 ## MDC-felt
 
@@ -143,7 +149,7 @@ Pluginen legger automatisk til følgende felt i MDC:
 |------|-------------|
 | `route` | Request URI (f.eks. `/api/varsler`) |
 | `method` | HTTP-metode (GET, POST, etc.) |
-| `domain` | Domenet requesten tilhører |
+| `domain` | Domenet requesten tilhører. **Feltet utelates dersom `call.mdcDomain = Domain.none` er satt for requesten.** |
 
 Feltene fjernes automatisk etter at responsen er sendt.
 

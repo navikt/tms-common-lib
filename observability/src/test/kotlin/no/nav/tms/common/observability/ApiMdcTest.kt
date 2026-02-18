@@ -12,12 +12,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import no.nav.tms.common.observability.Domain.Companion.mixed
+import no.nav.tms.common.observability.Domain.Companion.none
 import no.nav.tms.common.observability.Domain.Companion.varsel
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Test
@@ -44,7 +45,9 @@ class TraceloggingTest {
 
     @Test
     fun `legger til route og method MDC med domene for hele applikasjonen`() =
-        mdcTestApplication({ this.applicationDomain = varsel }) {
+        mdcTestApplication(
+            extraRoutes = { post("custom") { call.respond(MDC.getCopyOfContextMap()) } },
+            mdcConfig = { this.applicationDomain = varsel }) {
             val getMdc = client.get("varsel").mdcMap()
             getMdc["route"].asText() shouldBe "/varsel"
             getMdc["method"].asText() shouldBe "GET"
@@ -57,24 +60,46 @@ class TraceloggingTest {
         }
 
     @Test
-    fun `legger til domene på routes og metodenivå `() = mdcTestApplication({
-        applicationDomain = mixed
-        routeScopedDomains = true
-        methodScopedDomains = true
-    }) {
+    fun `legger til domene på routes og metodenivå `() = mdcTestApplication(
+        mdcConfig = {
+            applicationDomain = varsel
+        },
+        extraRoutes = {
+            route("route") {
+                mdcDomain = Domain.custom("route")
+                post {
+                    call.respond(MDC.getCopyOfContextMap())
+                }
+                get("method") {
+                    call.mdcDomain = Domain.custom("method")
+                    call.respond(MDC.getCopyOfContextMap())
+                }
+            }
+            get("nodomain") {
+                call.mdcDomain = none
+                call.respond(MDC.getCopyOfContextMap())
+            }
+        }
+    ) {
         val getMdcVarsel = client.get("varsel").mdcMap()
         getMdcVarsel["route"].asText() shouldBe "/varsel"
         getMdcVarsel["method"].asText() shouldBe "GET"
         getMdcVarsel["domain"].asText() shouldBe "varsel"
+
         val postMdcVarsel = client.post("varsel").mdcMap()
         postMdcVarsel["route"].asText() shouldBe "/varsel"
         postMdcVarsel["method"].asText() shouldBe "POST"
-        postMdcVarsel["domain"].asText() shouldBe "something-else"
+        postMdcVarsel["domain"].asText() shouldBe "varsel"
 
-        val postMdc = client.post("custom").mdcMap()
-        postMdc["route"].asText() shouldBe "/custom"
-        postMdc["method"].asText() shouldBe "POST"
-        postMdc["domain"].asText() shouldBe "custom"
+        val postRouteMdc = client.post("route").mdcMap()
+        postRouteMdc["route"].asText() shouldBe "/route"
+        postRouteMdc["method"].asText() shouldBe "POST"
+        postRouteMdc["domain"].asText() shouldBe "route"
+
+       val getMethodMdc = client.get("route/method").mdcMap()
+        getMethodMdc["route"].asText() shouldBe "/route/method"
+        getMethodMdc["method"].asText() shouldBe "GET"
+        getMethodMdc["domain"].asText() shouldBe "method"
 
         val nodomainMdc = client.get("nodomain").mdcMap()
         nodomainMdc["route"].asText() shouldBe "/nodomain"
@@ -89,7 +114,10 @@ class TraceloggingTest {
 }
 
 
-fun mdcTestApplication(mdcConfig: MdcDomainConfig.() -> Unit, block: suspend ApplicationTestBuilder.() -> Unit) =
+fun mdcTestApplication(
+    extraRoutes: Route.() -> Unit = {},
+    mdcConfig: MdcDomainConfig.() -> Unit, block: suspend ApplicationTestBuilder.() -> Unit
+) =
     testApplication {
         install(ApiMdc) {
             mdcConfig()
@@ -99,26 +127,15 @@ fun mdcTestApplication(mdcConfig: MdcDomainConfig.() -> Unit, block: suspend App
         }
         routing {
             route("varsel") {
-                mdcDomain = Domain.varsel
                 get {
                     call.respond(MDC.getCopyOfContextMap())
                 }
                 post {
-                    call.mdcDomain = Domain.custom("something-else")
                     call.respond(MDC.getCopyOfContextMap())
                 }
             }
-            route("custom") {
-                mdcDomain = Domain.custom("custom")
-                post {
-                    call.respond(MDC.getCopyOfContextMap())
-                }
-            }
-            get("nodomain") {
-                call.respond(MDC.getCopyOfContextMap())
-            }
+            extraRoutes()
         }
-
         block(this)
     }
 
