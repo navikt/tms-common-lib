@@ -2,6 +2,7 @@ package no.nav.tms.common.observability
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
@@ -10,7 +11,12 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.ApplicationStarted
+import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.hooks.MonitoringEvent
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -18,16 +24,34 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import no.nav.tms.common.observability.Domain.Companion.none
 import no.nav.tms.common.observability.Domain.Companion.varsel
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.MDC
 
 
-class TraceloggingTest {
+private val logger = KotlinLogging.logger { }
+
+class ApiMdcTest {
     private val objectMapper = jacksonObjectMapper()
+
+    @BeforeEach
+    fun setUp() {
+        MDC.clear()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        MDC.clear()
+    }
 
     @Test
     fun `Kaster feil ved ugyldig domene navn`() {
@@ -46,7 +70,7 @@ class TraceloggingTest {
     @Test
     fun `legger til route og method MDC med domene for hele applikasjonen`() =
         mdcTestApplication(
-            extraRoutes = { post("custom") { call.respond(MDC.getCopyOfContextMap()) } },
+            extraRoutes = { post("custom") { call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>()) } },
             mdcConfig = { this.applicationDomain = varsel }) {
             val getMdc = client.get("varsel").mdcMap()
             getMdc["route"].asText() shouldBe "/varsel"
@@ -68,16 +92,16 @@ class TraceloggingTest {
             route("route") {
                 mdcDomain = Domain.custom("route")
                 post {
-                    call.respond(MDC.getCopyOfContextMap())
+                    call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>())
                 }
                 get("method") {
                     call.mdcDomain = Domain.custom("method")
-                    call.respond(MDC.getCopyOfContextMap())
+                    call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>())
                 }
             }
             get("nodomain") {
                 call.mdcDomain = none
-                call.respond(MDC.getCopyOfContextMap())
+                call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>())
             }
         }
     ) {
@@ -96,7 +120,7 @@ class TraceloggingTest {
         postRouteMdc["method"].asText() shouldBe "POST"
         postRouteMdc["domain"].asText() shouldBe "route"
 
-       val getMethodMdc = client.get("route/method").mdcMap()
+        val getMethodMdc = client.get("route/method").mdcMap()
         getMethodMdc["route"].asText() shouldBe "/route/method"
         getMethodMdc["method"].asText() shouldBe "GET"
         getMethodMdc["domain"].asText() shouldBe "method"
@@ -107,8 +131,24 @@ class TraceloggingTest {
         nodomainMdc.has("domain") shouldBe false
     }
 
-    private suspend fun HttpResponse.mdcMap(): JsonNode = this.let {
-        status shouldBe HttpStatusCode.OK
+    @Test
+    fun `beholder MDC-verdier når exception kastes`() = mdcTestApplication(
+        mdcConfig = { applicationDomain = varsel },
+        extraRoutes = {
+            get("exception") {
+                throw IllegalStateException("test exception")
+            }
+        }
+    ) {
+        val mdc = client.get("exception").mdcMap(HttpStatusCode.InternalServerError)
+        mdc["route"].asText() shouldBe "/exception"
+        mdc["method"].asText() shouldBe "GET"
+        mdc["domain"].asText() shouldBe "varsel"
+    }
+
+
+    private suspend fun HttpResponse.mdcMap(expectStatus: HttpStatusCode = HttpStatusCode.OK): JsonNode = this.let {
+        status shouldBe expectStatus
         objectMapper.readTree(bodyAsText())
     }
 }
@@ -119,19 +159,29 @@ fun mdcTestApplication(
     mdcConfig: MdcDomainConfig.() -> Unit, block: suspend ApplicationTestBuilder.() -> Unit
 ) =
     testApplication {
+
+        install(MdcContextLogger)
         install(ApiMdc) {
             mdcConfig()
         }
         install(ContentNegotiation) {
             jackson {}
         }
+        install(StatusPages) {
+            exception<Throwable> { call, cause ->
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    MDC.getCopyOfContextMap() ?: emptyMap<String, String>()
+                )
+            }
+        }
         routing {
             route("varsel") {
                 get {
-                    call.respond(MDC.getCopyOfContextMap())
+                    call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>())
                 }
                 post {
-                    call.respond(MDC.getCopyOfContextMap())
+                    call.respond(MDC.getCopyOfContextMap() ?: emptyMap<String, String>())
                 }
             }
             extraRoutes()
@@ -143,5 +193,31 @@ fun mdcTestApplication(
 fun assertThrowsForReason(reason: String, block: () -> Unit) {
     withClue("$reason fører ikke til IllegalArgumentException") {
         assertThrows<IllegalArgumentException> { block() }
+    }
+
+}
+
+val MdcContextLogger = createApplicationPlugin(name = "MdcContextLogger") {
+    val logger = KotlinLogging.logger { }
+    var loggingJob: Job? = null
+
+    on(MonitoringEvent(ApplicationStarted)) { application ->
+        loggingJob = application.launch {
+            while (isActive) {
+                val mdcMap = MDC.getCopyOfContextMap() ?: emptyMap<String, String>()
+                if (mdcMap.containsKey("route")) {
+                    logger.error { "Mdc present outside of call" }
+                    throw AssertionError("Context blead from API-mdc in route "+mdcMap["route"])
+                } else {
+                    logger.info { "Mdc preserved within call to route" }
+                }
+                delay(1)
+            }
+        }
+    }
+
+    on(MonitoringEvent(ApplicationStopped)) { _ ->
+        loggingJob?.cancel()
+        loggingJob = null
     }
 }

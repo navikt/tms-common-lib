@@ -64,6 +64,8 @@ var Route.mdcDomain: Domain?
     }
 
 
+private val MDC_CONTEXT_MAP_KEY = AttributeKey<Map<String, String>>("mdcContextMap")
+
 /**
  * Ktor-plugin som legger til MDC-felt for route, method og domain på alle requests.
  *
@@ -72,10 +74,14 @@ var Route.mdcDomain: Domain?
  *  - `method`: HTTP-metode (GET, POST, ...)
  *  - `domain`: Domenet requesten tilhører (settes via [MdcDomainConfig])
  *
- * Konfigurasjon via [MdcDomainConfig]:
- *  - [applicationDomain]: Standard domene for hele applikasjonen
+ * Hvordan konfigurere
+ * - Når du installerer pluginen kan du gi et standarddomene for hele appen:
+ *   `install(ApiMdc) { applicationDomain = Domain.varsel }`
  *
- * Eksempel på bruk:
+ * Hvordan overstyre domenet
+ * - Sett `route.mdcDomain = Domain.custom("navn")` for en hel route.
+ * - Sett `call.mdcDomain = Domain.custom("navn")` inne i en route for å overstyre for ett kall.
+ * - Sett `call.mdcDomain = Domain.none` for å fjerne `domain` fra MDC for det kallet.
  *
  * ```kotlin
  * install(ApiMdc) {
@@ -87,24 +93,36 @@ var Route.mdcDomain: Domain?
  * @see MdcDomainConfig
  */
 val ApiMdc = createApplicationPlugin(name = "ApiMdc", createConfiguration = ::MdcDomainConfig) {
-    onCall { call ->
-        MDC.put("route", call.request.uri)
-        MDC.put("method", call.request.httpMethod.value)
-        pluginConfig.applicationDomain?.addToMdc()
-    }
-    on(MonitoringEvent(RoutingRoot.RoutingCallStarted)) { call ->
 
+    val appDomain = pluginConfig.applicationDomain
+
+     onCall { call ->
+        val mdcContextMap = mutableMapOf(
+            "route" to call.request.uri,
+            "method" to call.request.httpMethod.value
+        )
+        appDomain?.let { mdcContextMap["domain"] = it.name }
+
+        call.attributes.put(MDC_CONTEXT_MAP_KEY, mdcContextMap)
+        mdcContextMap.forEach { (key, value) -> MDC.put(key, value) }
+    }
+
+    onCallRespond { call, _ ->
+        call.attributes.getOrNull(MDC_CONTEXT_MAP_KEY)?.forEach { (key, value) ->
+            MDC.put(key, value)
+        }
+    }
+
+    on(ResponseSent) {
+        MDC.clear()
+    }
+
+    on(MonitoringEvent(RoutingRoot.RoutingCallStarted)) { call ->
         val routeDomain = call.route.findMdcDomain()
         if (routeDomain != null) {
             call.attributes.put(ROUTE_MDC_DOMAIN_KEY, routeDomain)
             routeDomain.addToMdc()
         }
-
-    }
-    on(ResponseSent) {
-        MDC.remove("route")
-        MDC.remove("method")
-        MDC.remove("domain")
     }
 }
 

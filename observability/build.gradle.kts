@@ -49,11 +49,8 @@ publishing {
 dependencies {
     compileOnly(KotlinLogging.logging)
     compileOnly(Ktor.Server.core)
-    implementation(Ktor.Server.metricsMicrometer)
-    implementation(Prometheus.exporterCommon)
-    implementation(Prometheus.metricsCore)
-    implementation(Micrometer.registryPrometheus)
     implementation(Logback.classic)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.7.3")
 
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
@@ -61,6 +58,8 @@ dependencies {
     testImplementation(Ktor.Test.serverTestHost)
     testImplementation(Ktor.Server.contentNegotiation)
     testImplementation(Ktor.Serialization.jackson)
+    testImplementation(Ktor.Server.statusPages)
+    testImplementation(KotlinLogging.logging)
 
 }
 
