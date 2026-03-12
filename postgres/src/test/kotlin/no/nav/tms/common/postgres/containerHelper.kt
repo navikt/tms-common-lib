@@ -10,6 +10,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 fun startContainer(version: String): PostgreSQLContainer {
     return PostgreSQLContainer("postgres:$version").also { container ->
         container.setWaitStrategy(Wait.forListeningPort())
+        val wait = System.getenv("GITHUB_ACTIONS")
+            ?.let { Wait.forLogMessage(".*database system is ready to accept connections.*\\s", 1) }
+            ?: Wait.forListeningPort()
+
+        container.setWaitStrategy(wait)
         container.start()
     }
 }

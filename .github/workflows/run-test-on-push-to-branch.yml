@@ -1,5 +1,7 @@
 name: Build and run tests
 
+env:
+  "GITHUB_ACTIONS": "true"
 on:
   push:
     branches-ignore:
