@@ -7,6 +7,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 // log pattern ".*database system is ready to accept connections.*\\s". However, colima is slightly too slow to
 // open the port to the postgres container, which leads to an immediate initialization error. It seems sufficient
 // to change container wait strategy to wait for listening port
+//
+//NB: the COLIMA_ENV environment variable must be set for the workaround
+
+
 fun startContainer(version: String): PostgreSQLContainer {
     return PostgreSQLContainer("postgres:$version").also { container ->
         val wait = System.getenv("COLIMA_ENV")
