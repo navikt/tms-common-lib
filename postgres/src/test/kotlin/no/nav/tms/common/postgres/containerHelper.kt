@@ -9,11 +9,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 // to change container wait strategy to wait for listening port
 fun startContainer(version: String): PostgreSQLContainer {
     return PostgreSQLContainer("postgres:$version").also { container ->
-        container.setWaitStrategy(Wait.forListeningPort())
-        val wait = System.getenv("GITHUB_ACTIONS")
-            ?.let { Wait.forLogMessage(".*database system is ready to accept connections.*\\s", 1) }
-            ?: Wait.forListeningPort()
-
+        val wait = System.getenv("COLIMA_ENV")
+            ?.let { Wait.forListeningPort() }
+            ?: Wait.defaultWaitStrategy()
         container.setWaitStrategy(wait)
         container.start()
     }
