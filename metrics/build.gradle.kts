@@ -56,6 +56,7 @@ dependencies {
 
     testImplementation(JunitPlatform.launcher)
     testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.engine)
     testImplementation(JunitJupiter.params)
     testImplementation(Kotest.assertionsCore)
     testImplementation(Ktor.Test.serverTestHost)

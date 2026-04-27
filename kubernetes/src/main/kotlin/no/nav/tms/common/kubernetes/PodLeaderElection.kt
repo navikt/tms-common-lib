@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -44,7 +44,7 @@ class PodLeaderElection(
 
 
     companion object {
-        private fun initializeClient() = HttpClient(Apache) {
+        private fun initializeClient() = HttpClient(Apache5) {
             install(ContentNegotiation) {
                 jackson {
                     registerModule(JavaTimeModule())

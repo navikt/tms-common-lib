@@ -60,6 +60,7 @@ class ApiMicrometricsTest {
             }
             install(Authentication) {
                 jwt {
+                    validate { }
                     skipWhen { true }
                 }
             }
@@ -93,6 +94,7 @@ class ApiMicrometricsTest {
             }
             install(Authentication) {
                 jwt {
+                    validate { }
                     skipWhen { true }
                 }
             }
@@ -219,6 +221,7 @@ private fun ApplicationTestBuilder.initTestApplication(
     }
     install(Authentication) {
         jwt {
+            validate { }
             skipWhen { true }
         }
     }

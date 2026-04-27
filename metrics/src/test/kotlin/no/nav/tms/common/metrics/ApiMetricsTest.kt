@@ -101,6 +101,9 @@ class ApiMetricsTest {
 
             install(Authentication) {
                 jwt {
+                    validate {
+
+                    }
                     skipWhen { true }
                 }
             }
@@ -294,6 +297,9 @@ private fun ApplicationTestBuilder.initTestApplication(returnStatus: HttpStatusC
 
     install(Authentication) {
         jwt {
+            validate {
+
+            }
             skipWhen { true }
         }
     }

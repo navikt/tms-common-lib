@@ -18,7 +18,7 @@ object Hikari: DependencyGroup {
 }
 
 object JacksonDatatype: DependencyGroup {
-    override val version get() = "2.20.1"
+    override val version get() = "2.21.2"
 
     val datatypeJsr310 get() = dependency("jackson-datatype-jsr310", groupId = "com.fasterxml.jackson.datatype")
     val moduleKotlin get() = dependency("jackson-module-kotlin", groupId = "com.fasterxml.jackson.module")
@@ -26,7 +26,7 @@ object JacksonDatatype: DependencyGroup {
 
 object JunitJupiter: DependencyGroup {
     override val groupId get() = "org.junit.jupiter"
-    override val version get() = "6.0.2"
+    override val version get() = "6.0.3"
 
     val api get() = dependency("junit-jupiter-api")
     val engine get() = dependency("junit-jupiter-engine")
@@ -35,14 +35,14 @@ object JunitJupiter: DependencyGroup {
 
 object JunitPlatform: DependencyGroup {
     override val groupId get() = "org.junit.platform"
-    override val version get() = "6.0.2"
+    override val version get() = "6.0.3"
 
     val launcher get() = dependency("junit-platform-launcher")
 }
 
 object Kotest: DependencyGroup {
     override val groupId get() = "io.kotest"
-    override val version get() = "6.0.7"
+    override val version get() = "6.1.11"
 
     val assertionsCore get() = dependency("kotest-assertions-core")
     val extensions get() = dependency("kotest-extensions")
@@ -50,12 +50,12 @@ object Kotest: DependencyGroup {
 
 object Kotlin: DependencyGroup {
     override val groupId get() = "org.jetbrains.kotlin"
-    override val version get() = "2.3.0"
+    override val version get() = "2.3.20"
 }
 
 object KotlinLogging: DependencyGroup {
     override val groupId get() = "io.github.oshai"
-    override val version get() = "7.0.14"
+    override val version get() = "8.0.01"
 
     val logging get() = dependency("kotlin-logging")
 }
@@ -74,7 +74,7 @@ object KotliQuery: DependencyGroup {
 }
 
 object Ktor {
-    val version get() = "3.3.3"
+    val version get() = "3.4.2"
     val groupId get() = "io.ktor"
 
     object Server: DependencyGroup {
@@ -98,7 +98,7 @@ object Ktor {
         override val version get() = Ktor.version
 
         val core get() = dependency("ktor-client-core")
-        val apache get() = dependency("ktor-client-apache")
+        val apache5 get() = dependency("ktor-client-apache5")
         val contentNegotiation get() = dependency("ktor-client-content-negotiation")
     }
 
@@ -120,7 +120,7 @@ object Ktor {
 }
 
 object Logback: DependencyGroup {
-    override val version = "1.5.24"
+    override val version = "1.5.32"
     val classic = "ch.qos.logback:logback-classic:$version"
 }
 
@@ -133,14 +133,14 @@ object Logstash: DependencyGroup {
 
 object Micrometer: DependencyGroup {
     override val groupId get() = "io.micrometer"
-    override val version get() = "1.16.1"
+    override val version get() = "1.16.5"
 
     val registryPrometheus get() = dependency("micrometer-registry-prometheus")
 }
 
 object Mockk: DependencyGroup {
     override val groupId get() = "io.mockk"
-    override val version get() = "1.14.7"
+    override val version get() = "1.14.9"
 
     val mockk get() = dependency("mockk")
 }
@@ -154,7 +154,7 @@ object Postgresql: DependencyGroup {
 
 
 object Prometheus: DependencyGroup {
-    override val version get() = "1.4.3"
+    override val version get() = "1.5.1"
     override val groupId get() = "io.prometheus"
 
     val metricsCore get() = dependency("prometheus-metrics-core")
@@ -162,7 +162,7 @@ object Prometheus: DependencyGroup {
 }
 
 object TestContainers: DependencyGroup {
-    override val version get() = "2.0.3"
+    override val version get() = "2.0.4"
     override val groupId get() = "org.testcontainers"
 
     val postgresql get() = dependency("testcontainers-postgresql")
