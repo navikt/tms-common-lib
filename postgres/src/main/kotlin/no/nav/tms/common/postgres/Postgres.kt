@@ -20,7 +20,7 @@ object Postgres {
             validationTimeout = 1000
             idleTimeout = 30000
             isAutoCommit = true
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            transactionIsolation = "TRANSACTION_READ_COMMITTED"
         }.apply(hikariConfig)
 
         return PostgresDatabase(HikariDataSource(config))

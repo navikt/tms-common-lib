@@ -21,8 +21,12 @@ class PostgresDatabase internal constructor(
                     .let(session::run)
             }
         } catch (e: Exception) {
-            if (e is SQLException && e.sqlState == PSQLState.UNIQUE_VIOLATION.state) {
-                throw UniqueConstraintException(e)
+            if (e is SQLException) {
+                when (e.sqlState) {
+                    PSQLState.UNIQUE_VIOLATION.state -> throw UniqueConstraintException(e)
+                    PSQLState.SERIALIZATION_FAILURE.state -> throw ConcurrentUpdateException(e)
+                    else -> throw QueryException("Error during 'update' query action", e)
+                }
             } else {
                 throw QueryException("Error during 'update' query action", e)
             }
@@ -80,5 +84,5 @@ open class QueryException(message: String, cause: Exception?): RuntimeException(
 
 class EmptyResultException(): QueryException("Could not return single row because query yielded empty result.", null)
 class UniqueConstraintException(cause: Exception): QueryException("Update or insert violates unique constraint", cause)
+class ConcurrentUpdateException(cause: Exception): QueryException("Attempted concurrent update of database row", cause)
 class BatchUpdateException(cause: Exception): QueryException("Exception raised during batched update or insert query", cause)
-
