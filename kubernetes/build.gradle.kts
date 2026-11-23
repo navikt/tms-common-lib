@@ -10,24 +10,33 @@ repositories {
 }
 
 dependencies {
-    api(kotlin("stdlib-jdk8"))
-    implementation(JacksonDatatype.datatypeJsr310)
-    implementation(JacksonDatatype.moduleKotlin)
-    implementation(Ktor.Client.core)
-    implementation(Ktor.Client.contentNegotiation)
-    implementation(Ktor.Client.apache5)
-    implementation(Ktor.Serialization.jackson)
-    implementation(Logback.classic)
-    implementation(Logstash.logbackEncoder)
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Mockk.mockk)
-    testImplementation(Ktor.Test.serverTestHost)
+    api(libs.ktor.client.core)
+    implementation(libs.jackson.annotations)
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.datatypeJsr310)
+    implementation(libs.ktor.client.apache5)
+    implementation(libs.ktor.client.contentNegotiation)
+    implementation(libs.ktor.http)
+    implementation(libs.ktor.serialization)
+    implementation(libs.ktor.serialization.jackson)
+    implementation(libs.ktor.utils)
+    runtimeOnly(libs.jackson.moduleKotlin)
+    runtimeOnly(libs.jackson3.core)
+    runtimeOnly(libs.jackson3.databind)
+    runtimeOnly(libs.logback.classic)
+
+    testImplementation(libs.junit.api)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.mockk)
+    testImplementation(libs.ktor.server.core)
+    testImplementation(libs.ktor.test.server)
+    testRuntimeOnly(libs.junit.engine)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories{
@@ -49,7 +58,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }

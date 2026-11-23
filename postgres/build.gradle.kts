@@ -12,7 +12,9 @@ repositories {
     mavenLocal()
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories{
@@ -33,7 +35,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
@@ -44,19 +46,24 @@ publishing {
 }
 
 dependencies {
-    implementation(Hikari.cp)
-    implementation(JacksonDatatype.datatypeJsr310)
-    implementation(JacksonDatatype.moduleKotlin)
-    implementation(KotlinLogging.logging)
-    implementation(KotliQuery.kotliquery)
-    implementation(Logback.classic)
-    implementation(Postgresql.postgresql)
-    implementation(TestContainers.postgresql)
+    api(libs.hikariCp)
+    api(libs.jackson.databind)
+    api(libs.kotliQuery)
+    api(libs.postgresql)
+    api(libs.testcontainers.postgresql)
+    implementation(libs.jackson.annotations)
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.datatypeJsr310)
+    implementation(libs.jackson.moduleKotlin)
+    runtimeOnly(libs.logback.classic)
 
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.kotest.assertionsShared)
+    testImplementation(libs.testcontainers.core)
+    testImplementation(libs.testcontainers.jdbc)
+    testRuntimeOnly(libs.junit.engine)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

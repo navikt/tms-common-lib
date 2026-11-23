@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest
-
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm")
@@ -15,7 +13,9 @@ repositories {
     mavenLocal()
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories {
@@ -36,7 +36,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
@@ -47,21 +47,26 @@ publishing {
 }
 
 dependencies {
-    compileOnly(KotlinLogging.logging)
-    compileOnly(Ktor.Server.core)
-    implementation(Logback.classic)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.7.3")
+    compileOnly(libs.kotlinLogging)
+    compileOnly(libs.ktor.server.core)
+    implementation(libs.slf4j.api)
+    runtimeOnly(libs.logback.classic)
 
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Ktor.Test.serverTestHost)
-    testImplementation(Ktor.Server.contentNegotiation)
-    testImplementation(Ktor.Serialization.jackson)
-    testImplementation(Ktor.Server.statusPages)
-    testImplementation(KotlinLogging.logging)
-
+    testImplementation(libs.jackson.databind)
+    testImplementation(libs.jackson.moduleKotlin)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.kotest.assertionsShared)
+    testImplementation(libs.kotlinLogging)
+    testImplementation(libs.kotlinx.coroutines)
+    testImplementation(libs.ktor.client.core)
+    testImplementation(libs.ktor.serialization)
+    testImplementation(libs.ktor.serialization.jackson)
+    testImplementation(libs.ktor.server.contentNegotiation)
+    testImplementation(libs.ktor.server.statusPages)
+    testImplementation(libs.ktor.test.server)
+    testRuntimeOnly(libs.junit.engine)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

@@ -10,16 +10,20 @@ repositories {
 }
 
 dependencies {
-    api(kotlin("stdlib-jdk8"))
-    implementation(Kotlinx.coroutines)
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Mockk.mockk)
+    api(libs.kotlinx.coroutines)
+
+    testImplementation(libs.junit.api)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.kotest.assertionsShared)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockkDsl)
+    testRuntimeOnly(libs.junit.launcher)
+    testRuntimeOnly(libs.junit.engine)
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories{
@@ -41,7 +45,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
