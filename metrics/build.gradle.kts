@@ -12,7 +12,9 @@ repositories {
     mavenLocal()
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories{
@@ -33,7 +35,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }
@@ -44,22 +46,33 @@ publishing {
 }
 
 dependencies {
-    implementation(KotlinLogging.logging)
-    implementation(Ktor.Server.auth)
-    implementation(Ktor.Server.authJwt)
-    implementation(Ktor.Server.core)
-    implementation(Ktor.Server.metricsMicrometer)
-    implementation(Logback.classic)
-    implementation(Prometheus.exporterCommon)
-    implementation(Prometheus.metricsCore)
-    implementation(Micrometer.registryPrometheus)
+    api(libs.ktor.events)
+    api(libs.ktor.http)
+    api(libs.ktor.server.core)
+    api(libs.ktor.utils)
+    api(libs.micrometer.registryPrometheus)
+    implementation(libs.auth0.javaJwt)
+    implementation(libs.kotlinLogging)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.authJwt)
+    implementation(libs.ktor.server.metricsMicrometer)
+    implementation(libs.micrometer.core)
+    implementation(libs.prometheus.metricsCore)
+    implementation(libs.prometheus.metricsExpositionTextformats)
+    implementation(libs.prometheus.metricsModel)
+    implementation(libs.slf4j.api)
+    runtimeOnly(libs.logback.classic)
 
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(JunitJupiter.params)
-    testImplementation(Kotest.assertionsCore)
-    testImplementation(Ktor.Test.serverTestHost)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit.params)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.kotest.assertionsShared)
+    testImplementation(libs.junit.commons)
+    testImplementation(libs.kotlinx.coroutines)
+    testImplementation(libs.ktor.client.core)
+    testImplementation(libs.ktor.test.server)
+    testRuntimeOnly(libs.junit.engine)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

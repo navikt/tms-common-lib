@@ -10,17 +10,24 @@ repositories {
 }
 
 dependencies {
-    api(kotlin("stdlib-jdk8"))
-    api(KotlinLogging.logging)
-    api(Logback.classic)
-    api(Logstash.logbackEncoder)
-    testImplementation(JunitPlatform.launcher)
-    testImplementation(JunitJupiter.api)
-    testImplementation(JunitJupiter.engine)
-    testImplementation(Kotest.assertionsCore)
+    api(libs.kotlinLogging)
+    implementation(libs.logback.classic)
+    implementation(libs.logback.core)
+    implementation(libs.logstash.logbackEncoder)
+    implementation(libs.slf4j.api)
+    runtimeOnly(libs.jackson3.core)
+    runtimeOnly(libs.jackson3.databind)
+
+    testImplementation(libs.junit.api)
+    testImplementation(libs.kotest.assertionsCore)
+    testImplementation(libs.kotest.assertionsShared)
+    testRuntimeOnly(libs.junit.engine)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
-val libraryVersion: String = properties["lib_version"]?.toString() ?: "latest-local"
+val libraryVersion: String = providers.gradleProperty("lib_version")
+    .orElse("latest-local")
+    .get()
 
 publishing {
     repositories{
@@ -42,7 +49,7 @@ publishing {
             version = libraryVersion
             from(components["java"])
 
-            val sourcesJar by tasks.registering(Jar::class) {
+            val sourcesJar = tasks.register<Jar>("sources") {
                 archiveClassifier.set("sources")
                 from(sourceSets.main.get().allSource)
             }

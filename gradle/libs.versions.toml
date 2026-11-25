@@ -1,0 +1,90 @@
+[metadata]
+format.version = "1.1"
+
+[versions]
+auth0 = "4.6.2"
+coroutines = "1.11.0"
+hikari = "7.1.0"
+jacksonDatatype = "2.23.0"
+jacksonAnnotations = "2.23"
+jacksonTools = "3.3.0"
+junitJupiter = "6.1.3"
+junitPlatform = "6.1.3"
+kotest = "6.2.7"
+kotlin = "2.4.21"
+kotlinLogging = "8.0.7"
+kotliQuery = "1.9.1"
+ktor = "3.6.1"
+logback = "1.6.8"
+logstash = "9.0"
+micrometer = "1.18.0"
+mockk = "1.14.12"
+postgresql = "42.7.14"
+prometheus = "1.10.0"
+slf4j = "2.0.19"
+testcontainers = "2.0.5"
+
+[libraries]
+auth0-javaJwt = { group = "com.auth0", name = "java-jwt", version.ref = "auth0" }
+hikariCp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
+
+jackson-moduleKotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version.ref = "jacksonDatatype" }
+jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jacksonAnnotations" }
+jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jacksonDatatype" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jacksonDatatype" }
+jackson-datatypeJsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310", version.ref = "jacksonDatatype" }
+jackson3-core = { group = "tools.jackson.core", name = "jackson-core", version.ref = "jacksonTools" }
+jackson3-databind = { group = "tools.jackson.core", name = "jackson-databind", version.ref = "jacksonTools" }
+
+junit-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junitJupiter" }
+junit-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
+junit-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junitJupiter" }
+junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
+
+kotest-assertionsCore = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-assertionsShared = { group = "io.kotest", name = "kotest-assertions-shared", version.ref = "kotest" }
+
+kotlinLogging = { group = "io.github.oshai", name = "kotlin-logging", version.ref = "kotlinLogging" }
+kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+
+kotliQuery = { group = "com.github.seratch", name = "kotliquery", version.ref = "kotliQuery" }
+
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-metricsMicrometer = { group = "io.ktor", name = "ktor-server-metrics-micrometer", version.ref = "ktor" }
+ktor-server-auth = { group = "io.ktor", name = "ktor-server-auth", version.ref = "ktor" }
+ktor-server-authJwt = { group = "io.ktor", name = "ktor-server-auth-jwt", version.ref = "ktor" }
+ktor-server-contentNegotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-statusPages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
+
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-apache5 = { group = "io.ktor", name = "ktor-client-apache5", version.ref = "ktor" }
+ktor-client-contentNegotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+
+ktor-events = { group = "io.ktor", name = "ktor-events", version.ref = "ktor" }
+ktor-http = { group = "io.ktor", name = "ktor-http", version.ref = "ktor" }
+ktor-serialization = { group = "io.ktor", name = "ktor-serialization", version.ref = "ktor" }
+ktor-serialization-jackson = { group = "io.ktor", name = "ktor-serialization-jackson", version.ref = "ktor" }
+ktor-utils = { group = "io.ktor", name = "ktor-utils", version.ref = "ktor" }
+
+ktor-test-server = { group = "io.ktor", name = "ktor-server-test-host", version.ref = "ktor" }
+
+logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+logback-core = { group = "ch.qos.logback", name = "logback-core", version.ref = "logback" }
+logstash-logbackEncoder = { group = "net.logstash.logback", name = "logstash-logback-encoder", version.ref = "logstash" }
+
+micrometer-registryPrometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus", version.ref = "micrometer" }
+micrometer-core = { group = "io.micrometer", name = "micrometer-core", version.ref = "micrometer" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockkDsl = { group = "io.mockk", name = "mockk-dsl", version.ref = "mockk" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+junit-commons = { group = "org.junit.platform", name = "junit-platform-commons", version.ref = "junitPlatform" }
+prometheus-metricsCore = { group = "io.prometheus", name = "prometheus-metrics-core", version.ref = "prometheus" }
+prometheus-metricsExpositionTextformats = { group = "io.prometheus", name = "prometheus-metrics-exposition-textformats", version.ref = "prometheus" }
+prometheus-metricsModel = { group = "io.prometheus", name = "prometheus-metrics-model", version.ref = "prometheus" }
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
+testcontainers-core = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainers" }
+testcontainers-jdbc = { group = "org.testcontainers", name = "testcontainers-jdbc", version.ref = "testcontainers" }
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
